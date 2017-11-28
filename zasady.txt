@@ -1,0 +1,31 @@
+W grze bierze udzia³ 2-4 graczy.
+Ka¿dy gracz otrzymuje kafelek z numerem 1 i kolorem.
+Na planszy/stole le¿¹ karty z numerami od 2 do 46.
+    Ka¿da karta ma te¿ swój obrazek, jednak nie wykorzystuje siê ró¿nic w wersji podstawowej gry.
+    Karty s¹ u³o¿one numerami do do³u (s¹ zakryte).
+Gracze wykonuj¹ swoje tury po kolei.
+    Ka¿dy gracz podczas tury odkrywa jedn¹, wybran¹ przez siebie kartê i mo¿e z ni¹ zrobiæ dwie rzeczy:
+        -Do³o¿yæ do swojego zamku.
+            Tylko i wy³¹cznie jeœli karta ma wiêkszy numer ni¿ najwy¿sza karta w jego zamku.
+            Kolejne karty mo¿na dok³adaæ tylko po ostatnio do³o¿onej karcie, nie mo¿na u³o¿yæ karty np. pomiêdzy ju¿ po³o¿onymi.
+        -Od³o¿yæ kartê na jej miejsce (numerem do do³u).
+        !!! Je¿eli kara ma ni¿szy numer ni¿ ostatnie karty w zamkach wszystkich graczy zostaje ona od³o¿ona do pude³ka, a ruch gracza siê koñczy.
+Wygrywa pierwszy gracz, który osi¹gnie zamek d³ugoœci 10 kart. np. [1,5,12,14,23,28,31,37,40,42],[1,2,3,4,5,6,7,8,9,10], itp.
+
+Rozszerzony wariant gry polega na tym ¿e gra siê do usuniêcia wszystkich kart ze sto³u (mo¿na te¿ graæ do osi¹gniêcia jednego zamku d³ugoœci 10).
+    Na koniec rozgrywki podlicza siê punkty:
+        - +1 za ka¿dy kafelek w zamku
+        - +1 za ka¿dego rycerza
+        - +1 za ka¿d¹ ksiê¿niczkê
+        - +3 za króla
+        - +3 za królow¹
+        - +1 za ka¿d¹ parê ksiê¿niczka i rycerz
+            np. +1 punkt za 1 ksiê¿niczkê i 3 rycerzy, bo 2 pozostaje wolnych, nie ¿e jakieœ dziwne zwi¹zki siê tworzy.
+Wystêpuje takrze karta czarnoksiê¿nika, która pozwala na jednorazowe wsuniêcie karty w œrodek zamku.
+W razie remisu:
+    - Wygrywa osoba posiadaj¹ca króla.
+    - Jeœli nikt go nie ma to wygrywa posiadacz królowej.
+    - Jeœli nikt nie ma ani jednej z nich to wygrywa posiadacz czarnoksiê¿nika.
+    - Jeœli nikt nie posiada poprzednich, to og³asza siê remis.
+
+Jako "gracz" rozumia³bym tak jak prowadz¹cy mówi³: dru¿ynê g³osuj¹c¹ na to któr¹ kartê podnieœæ i czy j¹ do³o¿yæ, czy od³o¿yæ.
