@@ -1,0 +1,15 @@
+public class Game {
+    private Set<Card> freeCards;
+
+    public Game(Set<Card> freeCards) {
+        this.freeCards = freeCards;
+    }
+
+    public Set<Card> getFreeCards() {
+        return freeCards;
+    }
+
+    public void setFreeCards(Set<Card> freeCards) {
+        this.freeCards = freeCards;
+    }
+}

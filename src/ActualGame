@@ -1,0 +1,31 @@
+public class ActualGame extends Game {
+    private Queue<Team> teams;
+    private Team winners;
+
+    public ActualGame(Queue<Teams> teams) {
+        super();
+        this.teams = teams;
+        Team winners = null;
+    }
+
+    public takeCard (Card card, Team team) {
+        freeCards.remove(card);
+        //@TODO
+    }
+
+    public Queue<Team> getTeams() {
+        return teams;
+    }
+
+    public void setTeams(Queue<Team> teams) {
+        this.teams = teams;
+    }
+
+    public Team getWinners() {
+        return winners;
+    }
+
+    public void setWinners(Team winners) {
+        this.winners = winners;
+    }
+}
