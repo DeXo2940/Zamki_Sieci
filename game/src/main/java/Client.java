@@ -20,11 +20,13 @@ public class Client {
         System.out.println("\r\nConnected to: " + client.socket.getInetAddress());
         String fromsrv;
 
-            DataOutputStream outToServer = new DataOutputStream(client.socket.getOutputStream());
-            BufferedReader inFromServer = new BufferedReader(new InputStreamReader(client.socket.getInputStream()));
-            outToServer.writeBytes("1234" + "\n");
-            fromsrv = inFromServer.readLine();
-            System.out.println("FROM SERVER:" + fromsrv);
+        DataOutputStream outToServer = new DataOutputStream(client.socket.getOutputStream());
+        BufferedReader inFromServer = new BufferedReader(new InputStreamReader(client.socket.getInputStream()));
+        outToServer.writeBytes("1234" + "\n");
+
+        while ((fromsrv = inFromServer.readLine()) != null) {
+            System.out.print(fromsrv);
+        }
 
     }
 }
