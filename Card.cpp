@@ -23,7 +23,7 @@ class Card {
 			return reversed;
 		}
 
-		void setReversed(bool reversed) {
+		void reverse(bool reversed) {
 			this->reversed = reversed;
 		}
 };
