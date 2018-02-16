@@ -18,6 +18,7 @@ public:
     void addToTeam(int nfds);
     void removeFromTeam(int nfds);
     
+    Castle getCastle();
 };
 
 #endif /* TEAM_H */ 

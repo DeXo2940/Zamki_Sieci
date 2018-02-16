@@ -27,5 +27,6 @@ void Team::removeFromTeam(int nfds) {
     }
 }
 
-
-
+Castle Team::getCastle() {
+    return this->castle;
+}
