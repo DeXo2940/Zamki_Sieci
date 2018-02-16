@@ -19,7 +19,8 @@
 
 struct pollfd fds[MAX_FDS];
 int nfds = 1;
-int values[MAX_FDS];
+int values[MAX_FDS][5];
+int value[MAX_FDS];
 
 int main(int argc, char *argv[]) {
     short server_port = SERVER_PORT;
@@ -48,15 +49,9 @@ int main(int argc, char *argv[]) {
         exit(3);
     }
 
-
     Table* table = new Table();
     //table->printCards('n');
     //table->printCards('k');
-
-
-
-
-
 
     struct sockaddr_in addr = {};
     addr.sin_family = AF_INET;
@@ -79,7 +74,7 @@ int main(int argc, char *argv[]) {
     fds[0].fd = listen_desc;
     fds[0].events = POLLIN;
 
-    printf("GOTOWY!\n");
+    printf("READY!\n");
 
     while (1) {
         rc = poll(fds, nfds, POLL_TIMEOUT);
@@ -115,21 +110,21 @@ int main(int argc, char *argv[]) {
                 printf("socket error, closing connection...\n");
                 close_conn = 1;
             } else if (fds[i].revents & POLLIN) {
-                int buffer = 0;
-                rc = read(fds[i].fd, &buffer, sizeof (int));
+                char buffer[5];
+                
+                rc = read(fds[i].fd, &buffer, 5*sizeof (char));
                 if (rc < 0) { //read failed
                     perror("read() failed");
                     close_conn = 1;
                 } else if (rc == 0) {
                     close_conn = 1;
                 } else {
-                    int value = buffer;
-                    printf("%d\n", value);
 
-                    buffer = value;
+                    
+                    
+                    
 
-
-                    rc = write(fds[i].fd, &buffer, sizeof (int));
+                    rc = write(fds[i].fd, &buffer, 5*sizeof (char));
                     if (rc < 0) { //write failed
                         perror("write() failed");
                         close_conn = 1;
