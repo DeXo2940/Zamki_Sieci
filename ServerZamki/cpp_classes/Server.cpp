@@ -8,10 +8,14 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include <stdlib.h> 
+#include <time.h> 
 
 #include "table.cpp"
 #include "card.cpp"
+#include "team.cpp"
 
+#define NUMBER_OF_TEAMS 2
 #define SERVER_PORT 1234
 #define POLL_TIMEOUT 30000
 #define MAX_FDS 200
@@ -19,7 +23,7 @@
 
 struct pollfd fds[MAX_FDS];
 int nfds = 1;
-int values[MAX_FDS][5];
+int values[MAX_FDS];
 int value[MAX_FDS];
 
 int main(int argc, char *argv[]) {
@@ -52,6 +56,26 @@ int main(int argc, char *argv[]) {
     Table* table = new Table();
     //table->printCards('n');
     //table->printCards('k');
+
+    Team * teams[NUMBER_OF_TEAMS];
+    char colors[] = {
+        'r', 'g', 'b', 'y', 'p', 'o', 'w'
+    };
+    for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
+        char color;
+        do {
+            color = colors[rand() % sizeof (colors) / sizeof (*colors)];
+        } while (color == 0);
+        teams[i] = new Team(i + 1, color);
+        for (int j = 0; j<sizeof (colors) / sizeof (*colors); ++j) {
+            if (colors[j] == color) {
+                colors[j] = 0;
+                break;
+            }
+        }
+        //printf("Team: %d\tColor: %c\n",teams[i]->getId(),teams[i]->getColor());
+    }
+
 
     struct sockaddr_in addr = {};
     addr.sin_family = AF_INET;
@@ -100,6 +124,21 @@ int main(int argc, char *argv[]) {
             fds[nfds].events = POLLIN;
             fds[nfds].revents = 0;
             values[nfds] = 0;
+
+            teams[nfds % NUMBER_OF_TEAMS]->addToTeam(nfds);
+            char buffer[6] = {'t', 'n', 'c', '0', 't', '\n'};
+            buffer[1] = '0' + teams[nfds % NUMBER_OF_TEAMS]->getId();
+            buffer[2] = teams[nfds % NUMBER_OF_TEAMS]->getColor();
+            rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+            if (rc < 0) { //write failed
+                perror("write() failed");
+                printf("closing connection...\n");
+                close(fds[nfds].fd);
+                fds[nfds].fd *= -1;
+                teams[nfds % NUMBER_OF_TEAMS]->removeFromTeam(nfds);
+            }
+
+
             nfds++;
         }
 
@@ -111,8 +150,8 @@ int main(int argc, char *argv[]) {
                 close_conn = 1;
             } else if (fds[i].revents & POLLIN) {
                 char buffer[5];
-                
-                rc = read(fds[i].fd, &buffer, 5*sizeof (char));
+
+                rc = read(fds[i].fd, &buffer, 5 * sizeof (char));
                 if (rc < 0) { //read failed
                     perror("read() failed");
                     close_conn = 1;
@@ -120,11 +159,11 @@ int main(int argc, char *argv[]) {
                     close_conn = 1;
                 } else {
 
-                    
-                    
-                    
 
-                    rc = write(fds[i].fd, &buffer, 5*sizeof (char));
+
+
+
+                    rc = write(fds[i].fd, &buffer, 5 * sizeof (char));
                     if (rc < 0) { //write failed
                         perror("write() failed");
                         close_conn = 1;
@@ -136,6 +175,24 @@ int main(int argc, char *argv[]) {
                 printf("closing connection...\n");
                 close(fds[i].fd);
                 fds[i].fd *= -1;
+                for (int j = 0; j < NUMBER_OF_TEAMS; ++j) {
+                    if(teams[j]->isInTeam(i)){
+                       teams[j]->removeFromTeam(i); 
+                    }
+                    
+                    printf("Team %d size: %d\n", teams[j]->getId(), teams[j]->getSize());
+                    if (teams[j]->getSize() == 0) {
+
+
+
+                        printf("Empty team: %d\n",teams[j]->getId());
+
+
+
+                    }
+                }
+
+
             }
         }
 
@@ -146,8 +203,14 @@ int main(int argc, char *argv[]) {
                 continue;
             fds[nfds] = fds[i];
             values[nfds] = values[i];
+            for (int j = 0; j < NUMBER_OF_TEAMS; ++j) {
+                if(teams[j]->isInTeam(nfds)){
+                    teams[j]->updateNfds(nfds, i);
+                }
+            }
             nfds++;
         }
+        //printf("NFDS: %d\n",nfds);
     }
 
     return 0;
