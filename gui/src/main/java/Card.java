@@ -20,7 +20,7 @@ public class Card {
         return reversed;
     }
 
-    public void setReversed(boolean reversed) {
-        this.reversed = reversed;
+    public void reverse() {
+        this.reversed = true;
     }
 }

@@ -8,18 +8,17 @@ public class Client implements Runnable {
     private Socket socket;
 
     public Client() {
-
+        this.run();
     }
     public Client(InetAddress serverAddress, int serverPort) throws Exception {
         this.socket = new Socket(serverAddress, serverPort);
     }
 
-    public static void main(String[] args) throws Exception {
-        Client client = new Client();
 
 
-        client.run();
-
+    public boolean isConnected() {
+        if(socket.isConnected()) return true;
+        else return false;
     }
 
     @Override

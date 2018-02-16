@@ -22,6 +22,7 @@ public class Controller implements Initializable {
 
 
     public void initialize(URL url, ResourceBundle resourceBundle) {
+
         endGame.setOnAction((ActionEvent event) -> {
             alert("Pomyślnie dodano klienta");
         });
