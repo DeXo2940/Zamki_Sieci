@@ -7,7 +7,7 @@
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="820.0" prefWidth="1119.0" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controller">
+<AnchorPane prefHeight="820.0" prefWidth="1119.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controller">
    <children>
       <Accordion layoutX="872.0" layoutY="-1.0" prefHeight="673.0" prefWidth="247.0" AnchorPane.topAnchor="-1.0">
         <panes>
@@ -30,7 +30,7 @@
         </items>
       </SplitPane>
       <Label layoutX="2.0" prefHeight="26.0" prefWidth="866.0" text="Twój team:" />
-      <Button layoutX="879.0" layoutY="679.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="224.0" text="Zakończ grę" />
+      <Button fx:id="endGame" layoutX="879.0" layoutY="679.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="224.0" text="Zakończ grę" />
       <Button layoutX="880.0" layoutY="713.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="224.0" text="Zmień nick" />
       <Button layoutX="880.0" layoutY="746.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="224.0" text="Wyświetl zasady" />
       <Button layoutX="879.0" layoutY="781.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="224.0" text="Informacje o teamie" />

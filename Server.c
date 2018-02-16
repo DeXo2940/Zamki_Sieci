@@ -102,6 +102,7 @@ int main(int argc, char *argv[]){
             else if (fds[i].revents & POLLIN){
                 int buffer = 0;
                 rc = read(fds[i].fd, &buffer, sizeof(int));
+
                 if (rc < 0){  //read failed
                     perror("read() failed");
                     close_conn = 1;
@@ -111,10 +112,8 @@ int main(int argc, char *argv[]){
                 }
                 else{
                     int value = buffer;
-                    printf("%d\n", value);
-                    values[i] = ntohl(buffer);
-                    buffer = htonl(values[i]);
-                    printf("%d, %d\n", values[i],buffer );
+                    printf("TO JEST TO: %d\n", buffer);
+
 
                     rc = write(fds[i].fd, &buffer, sizeof(int));
                     if (rc < 0){  //write failed
