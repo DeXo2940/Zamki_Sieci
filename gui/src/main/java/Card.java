@@ -1,18 +1,18 @@
 public class Card {
-    private String sign;
+    private int sign;
     private boolean reversed;
 
-    public Card (String sign) {
+    public Card (int sign) {
         this.sign = sign;
         this.reversed = false;
     }
 
 
-    public String getSign() {
+    public int getSign() {
         return sign;
     }
 
-    public void setSign(String sign) {
+    public void setSign(int sign) {
         this.sign = sign;
     }
 

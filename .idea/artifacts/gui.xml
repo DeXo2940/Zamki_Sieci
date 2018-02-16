@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="javafx" name="gui">
+    <output-path>$PROJECT_DIR$/out/artifacts/gui</output-path>
+    <root id="root">
+      <element id="archive" name="gui.jar">
+        <element id="module-output" name="gui" />
+      </element>
+    </root>
+  </artifact>
+</component>
