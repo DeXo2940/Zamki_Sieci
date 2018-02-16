@@ -4,10 +4,6 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>../cpp_classes/card.hpp</itemPath>
-      <itemPath>../cpp_classes/castle.hpp</itemPath>
-      <itemPath>../cpp_classes/table.hpp</itemPath>
-      <itemPath>../cpp_classes/team.hpp</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -16,11 +12,15 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>../Server.cpp</itemPath>
-      <itemPath>../cpp_classes/card.cpp</itemPath>
-      <itemPath>../cpp_classes/castle.cpp</itemPath>
-      <itemPath>../cpp_classes/table.cpp</itemPath>
-      <itemPath>../cpp_classes/team.cpp</itemPath>
+      <itemPath>Server.cpp</itemPath>
+      <itemPath>cpp_classes/card.cpp</itemPath>
+      <itemPath>cpp_classes/card.hpp</itemPath>
+      <itemPath>cpp_classes/castle.cpp</itemPath>
+      <itemPath>cpp_classes/castle.hpp</itemPath>
+      <itemPath>cpp_classes/table.cpp</itemPath>
+      <itemPath>cpp_classes/table.hpp</itemPath>
+      <itemPath>cpp_classes/team.cpp</itemPath>
+      <itemPath>cpp_classes/team.hpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -44,23 +44,23 @@
       </toolsSet>
       <compileType>
       </compileType>
-      <item path="../Server.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Server.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="../cpp_classes/card.cpp" ex="false" tool="1" flavor2="0">
+      <item path="cpp_classes/card.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="../cpp_classes/card.hpp" ex="false" tool="3" flavor2="0">
+      <item path="cpp_classes/card.hpp" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../cpp_classes/castle.cpp" ex="false" tool="1" flavor2="0">
+      <item path="cpp_classes/castle.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="../cpp_classes/castle.hpp" ex="false" tool="3" flavor2="0">
+      <item path="cpp_classes/castle.hpp" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../cpp_classes/table.cpp" ex="false" tool="1" flavor2="0">
+      <item path="cpp_classes/table.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="../cpp_classes/table.hpp" ex="false" tool="3" flavor2="0">
+      <item path="cpp_classes/table.hpp" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../cpp_classes/team.cpp" ex="false" tool="1" flavor2="0">
+      <item path="cpp_classes/team.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="../cpp_classes/team.hpp" ex="false" tool="3" flavor2="0">
+      <item path="cpp_classes/team.hpp" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
     <conf name="Release" type="1">
@@ -83,23 +83,23 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
-      <item path="../Server.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Server.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="../cpp_classes/card.cpp" ex="false" tool="1" flavor2="0">
+      <item path="cpp_classes/card.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="../cpp_classes/card.hpp" ex="false" tool="3" flavor2="0">
+      <item path="cpp_classes/card.hpp" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../cpp_classes/castle.cpp" ex="false" tool="1" flavor2="0">
+      <item path="cpp_classes/castle.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="../cpp_classes/castle.hpp" ex="false" tool="3" flavor2="0">
+      <item path="cpp_classes/castle.hpp" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../cpp_classes/table.cpp" ex="false" tool="1" flavor2="0">
+      <item path="cpp_classes/table.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="../cpp_classes/table.hpp" ex="false" tool="3" flavor2="0">
+      <item path="cpp_classes/table.hpp" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../cpp_classes/team.cpp" ex="false" tool="1" flavor2="0">
+      <item path="cpp_classes/team.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="../cpp_classes/team.hpp" ex="false" tool="3" flavor2="0">
+      <item path="cpp_classes/team.hpp" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
   </confs>

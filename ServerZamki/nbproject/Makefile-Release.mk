@@ -35,11 +35,11 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/_ext/5c0/Server.o \
-	${OBJECTDIR}/_ext/ecf6cfbb/card.o \
-	${OBJECTDIR}/_ext/ecf6cfbb/castle.o \
-	${OBJECTDIR}/_ext/ecf6cfbb/table.o \
-	${OBJECTDIR}/_ext/ecf6cfbb/team.o
+	${OBJECTDIR}/Server.o \
+	${OBJECTDIR}/cpp_classes/card.o \
+	${OBJECTDIR}/cpp_classes/castle.o \
+	${OBJECTDIR}/cpp_classes/table.o \
+	${OBJECTDIR}/cpp_classes/team.o
 
 
 # C Compiler Flags
@@ -66,30 +66,30 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/serverzamki: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/serverzamki ${OBJECTFILES} ${LDLIBSOPTIONS}
 
-${OBJECTDIR}/_ext/5c0/Server.o: ../Server.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/5c0
+${OBJECTDIR}/Server.o: Server.cpp 
+	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/5c0/Server.o ../Server.cpp
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Server.o Server.cpp
 
-${OBJECTDIR}/_ext/ecf6cfbb/card.o: ../cpp_classes/card.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/ecf6cfbb
+${OBJECTDIR}/cpp_classes/card.o: cpp_classes/card.cpp 
+	${MKDIR} -p ${OBJECTDIR}/cpp_classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/ecf6cfbb/card.o ../cpp_classes/card.cpp
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/cpp_classes/card.o cpp_classes/card.cpp
 
-${OBJECTDIR}/_ext/ecf6cfbb/castle.o: ../cpp_classes/castle.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/ecf6cfbb
+${OBJECTDIR}/cpp_classes/castle.o: cpp_classes/castle.cpp 
+	${MKDIR} -p ${OBJECTDIR}/cpp_classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/ecf6cfbb/castle.o ../cpp_classes/castle.cpp
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/cpp_classes/castle.o cpp_classes/castle.cpp
 
-${OBJECTDIR}/_ext/ecf6cfbb/table.o: ../cpp_classes/table.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/ecf6cfbb
+${OBJECTDIR}/cpp_classes/table.o: cpp_classes/table.cpp 
+	${MKDIR} -p ${OBJECTDIR}/cpp_classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/ecf6cfbb/table.o ../cpp_classes/table.cpp
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/cpp_classes/table.o cpp_classes/table.cpp
 
-${OBJECTDIR}/_ext/ecf6cfbb/team.o: ../cpp_classes/team.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/ecf6cfbb
+${OBJECTDIR}/cpp_classes/team.o: cpp_classes/team.cpp 
+	${MKDIR} -p ${OBJECTDIR}/cpp_classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/ecf6cfbb/team.o ../cpp_classes/team.cpp
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/cpp_classes/team.o cpp_classes/team.cpp
 
 # Subprojects
 .build-subprojects:
