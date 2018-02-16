@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 #include <stdlib.h>
 #include <sys/ioctl.h>
 #include <sys/poll.h>
@@ -9,7 +9,8 @@
 #include <errno.h>
 
 
-//#include "table.hpp"
+#include "table.cpp"
+#include "card.cpp"
 
 #define SERVER_PORT 1234
 #define POLL_TIMEOUT 30000
@@ -46,19 +47,16 @@ int main(int argc, char *argv[]) {
         close(listen_desc);
         exit(3);
     }
-    
-    
-    //Table* table = new Table();
-    /*
-    for(int i=0;i<10;++i){
-        printf("Karta %d: %d",i,table->getCard(i).getSign());
-    }
-    */
-    
-    
-    
-    
-    
+
+
+    Table* table = new Table();
+    //table->printCards('n');
+    //table->printCards('k');
+
+
+
+
+
 
     struct sockaddr_in addr = {};
     addr.sin_family = AF_INET;
@@ -80,9 +78,9 @@ int main(int argc, char *argv[]) {
 
     fds[0].fd = listen_desc;
     fds[0].events = POLLIN;
-    
-    printf("GOTOWY!");
-    
+
+    printf("GOTOWY!\n");
+
     while (1) {
         rc = poll(fds, nfds, POLL_TIMEOUT);
 
@@ -127,9 +125,9 @@ int main(int argc, char *argv[]) {
                 } else {
                     int value = buffer;
                     printf("%d\n", value);
-                    
+
                     buffer = value;
-                    
+
 
                     rc = write(fds[i].fd, &buffer, sizeof (int));
                     if (rc < 0) { //write failed
