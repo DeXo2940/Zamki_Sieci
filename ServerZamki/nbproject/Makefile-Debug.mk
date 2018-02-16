@@ -35,7 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/Server.o \
+	${OBJECTDIR}/cpp_classes/Server.o \
 	${OBJECTDIR}/cpp_classes/card.o \
 	${OBJECTDIR}/cpp_classes/castle.o \
 	${OBJECTDIR}/cpp_classes/table.o \
@@ -66,10 +66,10 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/serverzamki: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/serverzamki ${OBJECTFILES} ${LDLIBSOPTIONS}
 
-${OBJECTDIR}/Server.o: Server.cpp 
-	${MKDIR} -p ${OBJECTDIR}
+${OBJECTDIR}/cpp_classes/Server.o: cpp_classes/Server.cpp 
+	${MKDIR} -p ${OBJECTDIR}/cpp_classes
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Server.o Server.cpp
+	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/cpp_classes/Server.o cpp_classes/Server.cpp
 
 ${OBJECTDIR}/cpp_classes/card.o: cpp_classes/card.cpp 
 	${MKDIR} -p ${OBJECTDIR}/cpp_classes

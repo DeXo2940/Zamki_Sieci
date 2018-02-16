@@ -4,14 +4,13 @@
 #include "card.hpp"
 using namespace std;
 
-
 class Castle {
     vector<Card> castle;
     int size;
 public:
+    void addCard(Card card);
     Castle();
     int getSize();
-    void addCard(Card card);
 private:
     void incSize();
 };

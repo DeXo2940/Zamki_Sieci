@@ -2,7 +2,7 @@
 
 Castle::Castle() {
     this->size = 0;
-    this->addCard(new Card(1));
+    this->addCard(*new Card(1));
 }
 
 int Castle::getSize() {

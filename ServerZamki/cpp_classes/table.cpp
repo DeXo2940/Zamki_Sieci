@@ -3,9 +3,9 @@
 Table::Table() {
     srand(time(NULL));
     for (int i = 2; i < 47; ++i) {
-        this->table.push_back(new Card(i));
+        this->table.push_back(*new Card(i));
     }
-    this->shuffleTable(5000);
+    this->shuffleTable(10000);
 }
 
 Card Table::getCard(int possition) {
@@ -13,15 +13,29 @@ Card Table::getCard(int possition) {
 }
 
 void Table::shuffleTable(int howMuch) {
-    int cardPos1=0, cardPos2=0;
-    Card tmpCard;
+    int cardPos = 0;
+    Card* tmpCard;
     for (int i = 0; i < howMuch; ++i) {
-        cardPos1 = rand() % 45;
-        do {
-            cardPos2 = rand() % 45;
-        } while (cardPos1 == cardPos2);
-        tmpCard = this->getCard(cardPos1);
-        this->table[cardPos1] = this->table[cardPos2];
-        this->table[cardPos2] = tmpCard;
+        cardPos = rand() % this->table.size();
+        *tmpCard = this->getCard(cardPos);
+        this->table.erase(this->table.begin() + cardPos);
+        this->table.push_back(*tmpCard);
     }
 }
+
+void Table::printCards(char how) {
+    if (how == 'n') {
+        for (int i = 0; i<this->table.size(); ++i) {
+            printf("%d ", this->getCard(i).getSign());
+        }
+    } else {
+        for (int i = 0; i<this->table.size(); ++i) {
+            printf("Karta %d:\t%d\n", i, this->getCard(i).getSign());
+        }
+    }
+    printf("\n");
+}
+
+
+
+

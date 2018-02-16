@@ -16,7 +16,7 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>Server.cpp</itemPath>
+      <itemPath>cpp_classes/Server.cpp</itemPath>
       <itemPath>cpp_classes/card.cpp</itemPath>
       <itemPath>cpp_classes/castle.cpp</itemPath>
       <itemPath>cpp_classes/table.cpp</itemPath>
@@ -44,7 +44,7 @@
       </toolsSet>
       <compileType>
       </compileType>
-      <item path="Server.cpp" ex="false" tool="1" flavor2="0">
+      <item path="cpp_classes/Server.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="cpp_classes/card.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -83,7 +83,7 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
-      <item path="Server.cpp" ex="false" tool="1" flavor2="0">
+      <item path="cpp_classes/Server.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="cpp_classes/card.cpp" ex="false" tool="1" flavor2="0">
       </item>
