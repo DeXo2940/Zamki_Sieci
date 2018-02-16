@@ -27,13 +27,13 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception{
         this.primaryStage = primaryStage;
         Join controller = new Join(primaryStage);
-
         loader.setController(controller);
         AnchorPane root = loader.load();
         Scene scene = new Scene(root);
         primaryStage.setTitle("Hello World");
         primaryStage.setScene(scene);
         primaryStage.show();
+
 
     }
 
