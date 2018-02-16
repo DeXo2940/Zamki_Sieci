@@ -4,6 +4,10 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>cpp_classes/card.hpp</itemPath>
+      <itemPath>cpp_classes/castle.hpp</itemPath>
+      <itemPath>cpp_classes/table.hpp</itemPath>
+      <itemPath>cpp_classes/team.hpp</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -14,13 +18,9 @@
                    projectFiles="true">
       <itemPath>Server.cpp</itemPath>
       <itemPath>cpp_classes/card.cpp</itemPath>
-      <itemPath>cpp_classes/card.hpp</itemPath>
       <itemPath>cpp_classes/castle.cpp</itemPath>
-      <itemPath>cpp_classes/castle.hpp</itemPath>
       <itemPath>cpp_classes/table.cpp</itemPath>
-      <itemPath>cpp_classes/table.hpp</itemPath>
       <itemPath>cpp_classes/team.cpp</itemPath>
-      <itemPath>cpp_classes/team.hpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"

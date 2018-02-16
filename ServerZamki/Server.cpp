@@ -48,7 +48,10 @@ int main(int argc, char *argv[]) {
     }
     
     
-    
+    Table table = new Table();
+    for(int i=0;i<table.getTable().size();++i){
+        printf("Karta %d: %d",i,table.getCard(i).getSign());
+    }
     
     
     
