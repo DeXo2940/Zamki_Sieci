@@ -61,6 +61,10 @@ int main(int argc, char *argv[]) {
     char colors[] = {
         'r', 'g', 'b', 'y', 'p', 'o', 'w'
     };
+    if (NUMBER_OF_TEAMS>sizeof (colors) / sizeof (*colors)) {
+        perror("Can't create teams");
+        exit(13);
+    }
     for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
         char color;
         do {
@@ -73,7 +77,8 @@ int main(int argc, char *argv[]) {
                 break;
             }
         }
-        //printf("Team: %d\tColor: %c\n",teams[i]->getId(),teams[i]->getColor());
+        printf("Team: %d\tColor: %c\tCastle: %d\n",teams[i]->getId(),teams[i]->getColor(),teams[i]->getCastle().getCard(0)->getSign());
+        
     }
 
 
@@ -176,16 +181,16 @@ int main(int argc, char *argv[]) {
                 close(fds[i].fd);
                 fds[i].fd *= -1;
                 for (int j = 0; j < NUMBER_OF_TEAMS; ++j) {
-                    if(teams[j]->isInTeam(i)){
-                       teams[j]->removeFromTeam(i); 
+                    if (teams[j]->isInTeam(i)) {
+                        teams[j]->removeFromTeam(i);
                     }
-                    
+
                     printf("Team %d size: %d\n", teams[j]->getId(), teams[j]->getSize());
                     if (teams[j]->getSize() == 0) {
 
 
 
-                        printf("Empty team: %d\n",teams[j]->getId());
+                        printf("Empty team: %d\n", teams[j]->getId());
 
 
 
@@ -204,7 +209,7 @@ int main(int argc, char *argv[]) {
             fds[nfds] = fds[i];
             values[nfds] = values[i];
             for (int j = 0; j < NUMBER_OF_TEAMS; ++j) {
-                if(teams[j]->isInTeam(nfds)){
+                if (teams[j]->isInTeam(nfds)) {
                     teams[j]->updateNfds(nfds, i);
                 }
             }

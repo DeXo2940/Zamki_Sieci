@@ -1,6 +1,7 @@
 #ifndef CASTLE_HPP
 #define CASTLE_HPP
 #include <vector>
+#include <cstddef>
 #include "card.hpp"
 using namespace std;
 
@@ -11,6 +12,7 @@ public:
     void addCard(Card card);
     Castle();
     int getSize();
+    Card* getCard(int n);
 private:
     void incSize();
 };

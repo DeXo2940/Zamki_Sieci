@@ -18,4 +18,14 @@ void Castle::addCard(Card card) {
     this->incSize();
 }
 
+Card* Castle::getCard(int n) {
+    if(n>this->getSize()){
+        return NULL;
+    }
+    else{
+        return &this->castle.at(n);
+    }
+}
+
+
 
