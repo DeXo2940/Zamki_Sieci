@@ -7,6 +7,8 @@ public class Client implements Runnable {
 
 
     private Socket socket;
+    private Integer teamNumber = 0;
+    private String nick;
 
     public Client() {
 

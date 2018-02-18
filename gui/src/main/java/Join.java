@@ -17,18 +17,11 @@ public class Join implements Initializable {
     private Button btn;
     private Stage stage;
 
-    @FXML private URL location;
-    @FXML private ResourceBundle resources;
-
     @FXML
     private TextField srv, nick, port;
 
     public Join(Stage primaryStage) {
         this.stage = primaryStage;
-    }
-
-    private void sendToServer(String server, int port) throws Exception {
-     //   Client client = new Client(server, port);
     }
 
 
