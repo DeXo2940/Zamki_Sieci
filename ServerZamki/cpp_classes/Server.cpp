@@ -217,11 +217,8 @@ int main(int argc, char *argv[]) {
                     buffer[5] = '\0';
                     if (rc < 5 || contains(buffer, '\n') || !isValid(buffer)) { //invalid
                         if (buffer[0] != '\n') {
-                            buffer[0] = 'e';
-                            buffer[1] = 'r';
-                            buffer[2] = 'r';
-                            buffer[3] = 'r';
-                            buffer[4] = 'e';
+                            buffer[0] = buffer[4] = 'e';
+                            buffer[1] = buffer[2] = buffer[3] = 'r';
                             buffer[5] = '\n';
                             rc = write(fds[i].fd, &buffer, 6 * sizeof (char));
                             printf("Invalid input\n");
