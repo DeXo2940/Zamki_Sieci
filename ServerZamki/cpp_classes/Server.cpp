@@ -24,7 +24,41 @@
 struct pollfd fds[MAX_FDS];
 int nfds = 1;
 int values[MAX_FDS];
-int value[MAX_FDS];
+//int value[MAX_FDS];
+
+Team * teams[NUMBER_OF_TEAMS];
+
+bool contains(char com[5], char ch) {
+    for (int i = 0; i < 5; ++i) {
+        if (com[i] == ch) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool isValid(char com[5]) {
+    if (com[0] == com[4]) {
+        return true;
+    }
+    return false;
+}
+
+int emptyTeam() {
+    for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
+        if (teams[i]->getSize() == 0) {
+            printf("Empty team: %d\n", teams[i]->getId());
+            return i;
+        }
+    }
+    return -1;
+}
+
+void printfTeamsSizes() {
+    for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
+        printf("Team %d size: %d\n", teams[i]->getId(), teams[i]->getSize());
+    }
+}
 
 int main(int argc, char *argv[]) {
     short server_port = SERVER_PORT;
@@ -57,7 +91,8 @@ int main(int argc, char *argv[]) {
     //table->printCards('n');
     //table->printCards('k');
 
-    Team * teams[NUMBER_OF_TEAMS];
+    bool ready = false;
+
     char colors[] = {
         'r', 'g', 'b', 'y', 'p', 'o', 'w'
     };
@@ -77,8 +112,8 @@ int main(int argc, char *argv[]) {
                 break;
             }
         }
-        printf("Team: %d\tColor: %c\tCastle: %d\n",teams[i]->getId(),teams[i]->getColor(),teams[i]->getCastle().getCard(0)->getSign());
-        
+        printf("Team: %d\tColor: %c\tCastle: %d\n", teams[i]->getId(), teams[i]->getColor(), teams[i]->getCastle().getCard(0)->getSign());
+
     }
 
 
@@ -103,7 +138,7 @@ int main(int argc, char *argv[]) {
     fds[0].fd = listen_desc;
     fds[0].events = POLLIN;
 
-    printf("READY!\n");
+    printf("Server ready!\n");
 
     while (1) {
         rc = poll(fds, nfds, POLL_TIMEOUT);
@@ -112,7 +147,6 @@ int main(int argc, char *argv[]) {
             perror("poll() failed");
             break;
         }
-
         if (rc == 0) { //poll timeout //continue
             printf("poll() timed out.\n");
             continue;
@@ -128,23 +162,40 @@ int main(int argc, char *argv[]) {
             fds[nfds].fd = new_desc;
             fds[nfds].events = POLLIN;
             fds[nfds].revents = 0;
-            values[nfds] = 0;
+            //values[nfds] = 0;
 
-            teams[nfds % NUMBER_OF_TEAMS]->addToTeam(nfds);
+            //teams[nfds % NUMBER_OF_TEAMS]->addToTeam(nfds);
+            int teamNumber;
+            if (teams[0]->getSize() <= teams[1]->getSize()) {
+                teams[0]->addToTeam(nfds);
+                teamNumber = 0;
+            } else {
+                teams[1]->addToTeam(nfds);
+                teamNumber = 1;
+            }
+
+
             char buffer[6] = {'t', 'n', 'c', '0', 't', '\n'};
-            buffer[1] = '0' + teams[nfds % NUMBER_OF_TEAMS]->getId();
-            buffer[2] = teams[nfds % NUMBER_OF_TEAMS]->getColor();
+            buffer[1] = '0' + teams[teamNumber]->getId();
+            buffer[2] = teams[teamNumber]->getColor();
+
+            //dodać wysyłanie aktualnego stanu zamków
+
             rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
             if (rc < 0) { //write failed
                 perror("write() failed");
                 printf("closing connection...\n");
                 close(fds[nfds].fd);
                 fds[nfds].fd *= -1;
-                teams[nfds % NUMBER_OF_TEAMS]->removeFromTeam(nfds);
+                teams[teamNumber]->removeFromTeam(nfds);
+            }
+            nfds++;
+
+            if (ready == false && nfds >= 3 && emptyTeam() == -1) {
+                printf("Server ready for game!");
+                ready = true;
             }
 
-
-            nfds++;
         }
 
         for (int i = 1; i < nfds; i++) {
@@ -154,7 +205,7 @@ int main(int argc, char *argv[]) {
                 printf("socket error, closing connection...\n");
                 close_conn = 1;
             } else if (fds[i].revents & POLLIN) {
-                char buffer[5];
+                char buffer[6];
 
                 rc = read(fds[i].fd, &buffer, 5 * sizeof (char));
                 if (rc < 0) { //read failed
@@ -163,20 +214,36 @@ int main(int argc, char *argv[]) {
                 } else if (rc == 0) {
                     close_conn = 1;
                 } else {
+                    buffer[5] = '\0';
+                    if (rc < 5 || contains(buffer, '\n') || !isValid(buffer)) { //invalid
+                        if (buffer[0] != '\n') {
+                            buffer[0] = 'e';
+                            buffer[1] = 'r';
+                            buffer[2] = 'r';
+                            buffer[3] = 'r';
+                            buffer[4] = 'e';
+                            buffer[5] = '\n';
+                            rc = write(fds[i].fd, &buffer, 6 * sizeof (char));
+                            printf("Invalid input\n");
+                        }
+                    } else {
 
+                        printf("Readed: %s\n", buffer);
 
-
-
-
-                    rc = write(fds[i].fd, &buffer, 5 * sizeof (char));
-                    if (rc < 0) { //write failed
-                        perror("write() failed");
-                        close_conn = 1;
+                        buffer[5] = '\n';
+                        rc = write(fds[i].fd, &buffer, 6 * sizeof (char));
+                        if (rc < 0) { //write failed
+                            perror("write() failed");
+                            close_conn = 1;
+                        }
                     }
+
+
+
                 }
             }
 
-            if (close_conn) { //close connection
+            if (close_conn == 1) { //close connection
                 printf("closing connection...\n");
                 close(fds[i].fd);
                 fds[i].fd *= -1;
@@ -185,16 +252,8 @@ int main(int argc, char *argv[]) {
                         teams[j]->removeFromTeam(i);
                     }
 
-                    printf("Team %d size: %d\n", teams[j]->getId(), teams[j]->getSize());
-                    if (teams[j]->getSize() == 0) {
+                    //printf("Team %d size: %d\n", teams[j]->getId(), teams[j]->getSize());
 
-
-
-                        printf("Empty team: %d\n", teams[j]->getId());
-
-
-
-                    }
                 }
 
 
@@ -203,11 +262,11 @@ int main(int argc, char *argv[]) {
 
         int n = nfds;
         nfds = 1;
-        for (int i = 1; i < n; i++) {
+        for (int i = 1; i < n; ++i) {
             if (fds[i].fd < 0)
                 continue;
             fds[nfds] = fds[i];
-            values[nfds] = values[i];
+            //values[nfds] = values[i];
             for (int j = 0; j < NUMBER_OF_TEAMS; ++j) {
                 if (teams[j]->isInTeam(nfds)) {
                     teams[j]->updateNfds(nfds, i);
@@ -215,7 +274,11 @@ int main(int argc, char *argv[]) {
             }
             nfds++;
         }
-        //printf("NFDS: %d\n",nfds);
+
+        //printfTeamsSizes();
+        if (ready == true && emptyTeam() != -1) {
+            //koniec gry bo pusty team
+        }
     }
 
     return 0;
