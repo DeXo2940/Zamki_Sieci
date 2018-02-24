@@ -57,3 +57,7 @@ bool Team::isInTeam(int nfds) {
     }
     return false;
 }
+
+void Team::addCard(Card card) {
+    this->castle.addCard(card);
+}

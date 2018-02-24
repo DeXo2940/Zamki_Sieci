@@ -91,7 +91,10 @@ int main(int argc, char *argv[]) {
     //table->printCards('n');
     //table->printCards('k');
 
+
     bool ready = false;
+    int team = 0;
+    int phase = 0;
 
     char colors[] = {
         'r', 'g', 'b', 'y', 'p', 'o', 'w'
@@ -112,10 +115,8 @@ int main(int argc, char *argv[]) {
                 break;
             }
         }
-        printf("Team: %d\tColor: %c\tCastle: %d\n", teams[i]->getId(), teams[i]->getColor(), teams[i]->getCastle().getCard(0)->getSign());
-
+        printf("Team: %d\tColor: %c\n", teams[i]->getId(), teams[i]->getColor());
     }
-
 
     struct sockaddr_in addr = {};
     addr.sin_family = AF_INET;
@@ -174,25 +175,88 @@ int main(int argc, char *argv[]) {
                 teamNumber = 1;
             }
 
+            bool ok = true;
 
             char buffer[6] = {'t', 'n', 'c', '0', 't', '\n'};
             buffer[1] = '0' + teams[teamNumber]->getId();
             buffer[2] = teams[teamNumber]->getColor();
 
-            //dodać wysyłanie aktualnego stanu zamków
+
 
             rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
             if (rc < 0) { //write failed
+                ok = false;
+            }
+
+            buffer[0] = buffer[4] = 'n';
+            buffer[1] = '0' + NUMBER_OF_TEAMS;
+            buffer[2] = buffer[3] = '0';
+
+            rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+            if (rc < 0) { //write failed
+                ok = false;
+            }
+
+            for (int i = 0; i < NUMBER_OF_TEAMS && ok == true; ++i) {
+                //ilość graczy w teamach
+                buffer[0] = buffer[4] = 's';
+                buffer[1] = '0' + teams[i]->getId();
+                buffer[2] = '0' + teams[i]->getSize() / 10;
+                buffer[3] = '0' + teams[i]->getSize() % 10;
+
+                rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+                if (rc < 0) { //write failed
+                    ok = false;
+                    break;
+                }
+
+                buffer[0] = buffer[4] = 'c';
+                buffer[1] = '0' + teams[i]->getId();
+                buffer[2] = '0' + teams[i]->getCastle().getSize() / 10;
+                buffer[3] = '0' + teams[i]->getCastle().getSize() % 10;
+
+                rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+                if (rc < 0) { //write failed
+                    ok = false;
+                    break;
+                }
+                
+                for (int j = 0; j < teams[i]->getCastle().getSize(); ++j) {
+                    //stan zamków
+                    printf("=%d=\n", teams[i]->getCastle().getCard(j)->getSign());
+                    buffer[0] = buffer[4] = 'z';
+                    //buffer[1] = '0' + teams[i]->getId();
+                    buffer[2] = '0' + teams[i]->getCastle().getCard(j)->getSign() / 10;
+                    buffer[3] = '0' + teams[i]->getCastle().getCard(j)->getSign() % 10;
+                    rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+                    if (rc < 0) { //write failed
+                        ok = false;
+                        break;
+                    }
+
+                }
+
+            }
+            
+            //koniec komunikatu
+            buffer[0] = buffer[4] = 'a';
+            buffer[1] = buffer[2] = buffer[3] = '0';
+            rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+            if (rc < 0) { //write failed
+                ok = false;
+                break;
+            }
+            if (ok == false) { //write failed
                 perror("write() failed");
                 printf("closing connection...\n");
                 close(fds[nfds].fd);
                 fds[nfds].fd *= -1;
                 teams[teamNumber]->removeFromTeam(nfds);
             }
-            nfds++;
 
+            nfds++;
             if (ready == false && nfds >= 3 && emptyTeam() == -1) {
-                printf("Server ready for game!");
+                printf("Server ready for game!\n");
                 ready = true;
             }
 
@@ -234,8 +298,6 @@ int main(int argc, char *argv[]) {
                             close_conn = 1;
                         }
                     }
-
-
 
                 }
             }

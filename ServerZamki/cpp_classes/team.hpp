@@ -18,6 +18,7 @@ public:
     int getId();
     int getSize();
     
+    void addCard(Card card);
     
     void addToTeam(int nfds);
     void removeFromTeam(int nfds);
