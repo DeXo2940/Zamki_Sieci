@@ -239,7 +239,7 @@ int main(int argc, char *argv[]) {
             }
             
             //koniec komunikatu
-            buffer[0] = buffer[4] = 'a';
+            buffer[0] = buffer[4] = 'x';
             buffer[1] = buffer[2] = buffer[3] = '0';
             rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
             if (rc < 0) { //write failed
