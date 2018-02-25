@@ -181,8 +181,6 @@ int main(int argc, char *argv[]) {
             buffer[1] = '0' + teams[teamNumber]->getId();
             buffer[2] = teams[teamNumber]->getColor();
 
-
-
             rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
             if (rc < 0) { //write failed
                 ok = false;
@@ -196,34 +194,28 @@ int main(int argc, char *argv[]) {
             if (rc < 0) { //write failed
                 ok = false;
             }
-
+            //ilość graczy w teamach i stan zamków
             for (int i = 0; i < NUMBER_OF_TEAMS && ok == true; ++i) {
-                //ilość graczy w teamach
                 buffer[0] = buffer[4] = 's';
                 buffer[1] = '0' + teams[i]->getId();
                 buffer[2] = '0' + teams[i]->getSize() / 10;
                 buffer[3] = '0' + teams[i]->getSize() % 10;
-
                 rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
                 if (rc < 0) { //write failed
                     ok = false;
-                    break;
+                } else {
+                    buffer[0] = buffer[4] = 'c';
+                    buffer[1] = '0' + teams[i]->getId();
+                    buffer[2] = '0' + teams[i]->getCastle().getSize() / 10;
+                    buffer[3] = '0' + teams[i]->getCastle().getSize() % 10;
+                    rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+                    if (rc < 0) { //write failed
+                        ok = false;
+                    }
                 }
-
-                buffer[0] = buffer[4] = 'c';
-                buffer[1] = '0' + teams[i]->getId();
-                buffer[2] = '0' + teams[i]->getCastle().getSize() / 10;
-                buffer[3] = '0' + teams[i]->getCastle().getSize() % 10;
-
-                rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
-                if (rc < 0) { //write failed
-                    ok = false;
-                    break;
-                }
-                
-                for (int j = 0; j < teams[i]->getCastle().getSize(); ++j) {
-                    //stan zamków
-                    printf("=%d=\n", teams[i]->getCastle().getCard(j)->getSign());
+                //stan zamków
+                for (int j = 0; j < teams[i]->getCastle().getSize() && ok == true; ++j) {
+                    //printf("=%d=\n", teams[i]->getCastle().getCard(j)->getSign());
                     buffer[0] = buffer[4] = 'z';
                     //buffer[1] = '0' + teams[i]->getId();
                     buffer[2] = '0' + teams[i]->getCastle().getCard(j)->getSign() / 10;
@@ -231,35 +223,46 @@ int main(int argc, char *argv[]) {
                     rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
                     if (rc < 0) { //write failed
                         ok = false;
-                        break;
                     }
-
                 }
+                //stan stołu - usunięte karty (te którch stan ustawiono na 0)
+                for (int j = 0; j < table->getSize() && ok == true; ++j) {
+                    if (table->getCard(j).getSign() == 0) {
+                        buffer[0] = buffer[4] = 't';
+                        buffer[1] = '0' + j / 10;
+                        buffer[2] = '0' + j / 0;
+                        buffer[3] = '0';
+                        rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+                        if (rc < 0) { //write failed
+                            ok = false;
+                        }
+                    }
+                }
+            }
+            //koniec komunikatów, uznaj się za poprawnie dodanego 
+            if (ok == true) {
+                buffer[0] = buffer[4] = 'x';
+                buffer[1] = buffer[2] = buffer[3] = '0';
+                rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+                if (rc < 0) { //write failed
+                    ok = false;
+                }
+            }
 
-            }
-            
-            //koniec komunikatu
-            buffer[0] = buffer[4] = 'x';
-            buffer[1] = buffer[2] = buffer[3] = '0';
-            rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
-            if (rc < 0) { //write failed
-                ok = false;
-                break;
-            }
             if (ok == false) { //write failed
                 perror("write() failed");
                 printf("closing connection...\n");
                 close(fds[nfds].fd);
                 fds[nfds].fd *= -1;
                 teams[teamNumber]->removeFromTeam(nfds);
+            } else {
+                nfds++;
             }
 
-            nfds++;
             if (ready == false && nfds >= 3 && emptyTeam() == -1) {
                 printf("Server ready for game!\n");
                 ready = true;
             }
-
         }
 
         for (int i = 1; i < nfds; i++) {
