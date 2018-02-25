@@ -36,6 +36,15 @@ void Table::printCards(char how) {
     printf("\n");
 }
 
+int Table::getSize() {
+    return this->table.size();
+}
 
+vector<Card> Table::getTable() {
+    return this->table;
+}
 
+void Table::removeCard(int possition) {
+    this->getCard(possition).setSign(0);
+}
 
