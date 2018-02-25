@@ -8,14 +8,15 @@ public class Client implements Runnable {
 
     private Socket socket;
     private Integer teamNumber = 0;
+    private Integer move;
+    private Game game;
 
     public Client() {
-
+        this.game = new Game();
     }
 
     public void doIt(String server, int serverPort) throws Exception {
         this.socket = new Socket(InetAddress.getByName(server), serverPort);
-        this.run();
     }
 
     public boolean isConnected() {
@@ -86,9 +87,9 @@ public class Client implements Runnable {
 
 
             while ((fromsrv = inFromServer.readLine()) != null) {
-                System.out.print(fromsrv);
+                System.out.println(fromsrv);
                 checkCommunicate(fromsrv);
-                System.out.println(ifImNew(fromsrv));
+                //System.out.println(ifImNew(fromsrv));
             }
         } catch (Exception e) {
             e.printStackTrace();

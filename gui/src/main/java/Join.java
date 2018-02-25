@@ -1,3 +1,4 @@
+import com.sun.java.accessibility.util.GUIInitializedListener;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -30,20 +31,15 @@ public class Join implements Initializable {
         Client client = new Client();
         btn.setOnAction((ActionEvent actionEvent) -> {
             try {
-                Parent pane = FXMLLoader.load(
-                        getClass().getResource("/GUI.fxml"));
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/GUI.fxml"));
+                Parent pane = loader.load();
+                Controller controller = loader.getController();
+                client.doIt(srv.getText(), Integer.parseInt(port.getText()));
+                controller.setClient(client);
                 stage.getScene().setRoot(pane);
                 stage.setHeight(850);
                 stage.setWidth(1120);
                 stage.centerOnScreen();
-                Task<Void> task = new Task<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        client.doIt(srv.getText(), Integer.parseInt(port.getText()));
-                        return null;
-                    }
-                };
-                new Thread(task).start();
 
             } catch (Exception e) {
                 e.printStackTrace();
