@@ -178,7 +178,8 @@ int main(int argc, char *argv[]) {
                 }
             }
             teamNumber -= 1;
-
+            teams[teamNumber]->addToTeam(nfds);
+            
             /*
             if (teams[0]->getSize() <= teams[1]->getSize()) {
                 teams[0]->addToTeam(nfds);
