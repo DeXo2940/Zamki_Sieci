@@ -173,21 +173,15 @@ int main(int argc, char *argv[]) {
 
             int teamNumber;
             for (teamNumber = 1; teamNumber < NUMBER_OF_TEAMS; ++teamNumber) {
-                if (teams[teamNumber - 1]->getSize() < teams[teamNumber]->getSize()) {
+                if (teams[teamNumber - 1]->getSize() <= teams[teamNumber]->getSize()) {
                     break;
                 }
             }
             teamNumber -= 1;
+            printf("=%d=\n",teamNumber);
             teams[teamNumber]->addToTeam(nfds);
             
-            /*
-            if (teams[0]->getSize() <= teams[1]->getSize()) {
-                teams[0]->addToTeam(nfds);
-                teamNumber = 0;
-            } else {
-                teams[1]->addToTeam(nfds);
-                teamNumber = 1;
-            }*/
+            
 
             //kolor i numer drużyny
             char buffer[6] = {'t', 'n', 'c', '0', 't', '\n'};
