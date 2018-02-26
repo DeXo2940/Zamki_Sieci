@@ -1,22 +1,14 @@
 import java.util.ArrayList;
 
 public class Game {
-    private ArrayList<Team> teams;
+    private Team mine, opposite;
     private Integer howManyCards;
 
     public Game () {
-        teams = new ArrayList<>();
         howManyCards = 0;
     }
 
 
-    public ArrayList<Team> getTeams() {
-        return teams;
-    }
-
-    public void setTeams(ArrayList<Team> teams) {
-        this.teams = teams;
-    }
 
     public Integer getHowManyCards() {
         return howManyCards;
@@ -24,5 +16,21 @@ public class Game {
 
     public void setHowManyCards(Integer howManyCards) {
         this.howManyCards = howManyCards;
+    }
+
+    public Team getMine() {
+        return mine;
+    }
+
+    public void setMine(Team mine) {
+        this.mine = mine;
+    }
+
+    public Team getOpposite() {
+        return opposite;
+    }
+
+    public void setOpposite(Team opposite) {
+        this.opposite = opposite;
     }
 }

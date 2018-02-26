@@ -6,6 +6,14 @@ public class Team {
     private Integer number;
     private ArrayList<Card> castle;
 
+    public Team (Integer player, String color, Integer number) {
+        players = new ArrayList<>();
+        players.add(player);
+        this.color = color;
+        this.number = number;
+        castle = new ArrayList<>();
+    }
+
     public ArrayList<Integer> getPlayers() {
         return players;
     }
