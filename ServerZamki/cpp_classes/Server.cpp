@@ -23,8 +23,6 @@
 
 struct pollfd fds[MAX_FDS];
 int nfds = 1;
-int values[MAX_FDS];
-//int value[MAX_FDS];
 
 Team * teams[NUMBER_OF_TEAMS];
 
@@ -60,7 +58,24 @@ void printfTeamsSizes() {
     }
 }
 
+void writeError(int number) {
+    perror("write() failed");
+    printf("closing connection...\n");
+    close(fds[number].fd);
+    fds[number].fd *= -1;
+    for (int teamNumber = 0; teamNumber < NUMBER_OF_TEAMS; ++teamNumber) {
+        if (teams[teamNumber]->isInTeam(number)) {
+            teams[teamNumber]->removeFromTeam(number);
+        }
+    }
+}
+
 int main(int argc, char *argv[]) {
+    //int team = 0;
+    //int phase = 0;
+    vector<int> readyList;
+
+    bool ready = false;
     short server_port = SERVER_PORT;
     if (argc > 1) {
         char *p;
@@ -88,18 +103,11 @@ int main(int argc, char *argv[]) {
     }
 
     Table* table = new Table();
-    //table->printCards('n');
-    //table->printCards('k');
-
-
-    bool ready = false;
-    int team = 0;
-    int phase = 0;
-
+    //utwórz teamy, nadaj im "kolory"
     char colors[] = {
         'r', 'g', 'b', 'y', 'p', 'o', 'w'
     };
-    if (NUMBER_OF_TEAMS>sizeof (colors) / sizeof (*colors)) {
+    if (NUMBER_OF_TEAMS < 2 || NUMBER_OF_TEAMS>sizeof (colors) / sizeof (*colors)) {
         perror("Can't create teams");
         exit(13);
     }
@@ -128,14 +136,12 @@ int main(int argc, char *argv[]) {
         close(listen_desc);
         exit(4);
     }
-
     rc = listen(listen_desc, 32);
     if (rc < 0) { //listen failed
         perror("listen() failed");
         close(listen_desc);
         exit(5);
     }
-
     fds[0].fd = listen_desc;
     fds[0].events = POLLIN;
 
@@ -155,44 +161,49 @@ int main(int argc, char *argv[]) {
 
         if (fds[0].revents & POLLIN) {
             int new_desc = accept(listen_desc, NULL, NULL);
+            bool ok = true;
             if (new_desc < 0) {
                 perror("accept() failed");
                 break;
             }
-            printf("new connection accepted...\n");
+            printf("New connection accepted...\n");
             fds[nfds].fd = new_desc;
             fds[nfds].events = POLLIN;
             fds[nfds].revents = 0;
-            //values[nfds] = 0;
 
-            //teams[nfds % NUMBER_OF_TEAMS]->addToTeam(nfds);
             int teamNumber;
+            for (teamNumber = 1; teamNumber < NUMBER_OF_TEAMS; ++teamNumber) {
+                if (teams[teamNumber - 1]->getSize() < teams[teamNumber]->getSize()) {
+                    break;
+                }
+            }
+            teamNumber -= 1;
+
+            /*
             if (teams[0]->getSize() <= teams[1]->getSize()) {
                 teams[0]->addToTeam(nfds);
                 teamNumber = 0;
             } else {
                 teams[1]->addToTeam(nfds);
                 teamNumber = 1;
-            }
+            }*/
 
-            bool ok = true;
-
+            //kolor i numer drużyny
             char buffer[6] = {'t', 'n', 'c', '0', 't', '\n'};
             buffer[1] = '0' + teams[teamNumber]->getId();
             buffer[2] = teams[teamNumber]->getColor();
-
             rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
             if (rc < 0) { //write failed
                 ok = false;
-            }
-
-            buffer[0] = buffer[4] = 'n';
-            buffer[1] = '0' + NUMBER_OF_TEAMS;
-            buffer[2] = buffer[3] = '0';
-
-            rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
-            if (rc < 0) { //write failed
-                ok = false;
+            } else {
+                //liczba teamów
+                buffer[0] = buffer[4] = 'n';
+                buffer[1] = '0' + NUMBER_OF_TEAMS;
+                buffer[2] = buffer[3] = '0';
+                rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+                if (rc < 0) { //write failed
+                    ok = false;
+                }
             }
             //ilość graczy w teamach i stan zamków
             for (int i = 0; i < NUMBER_OF_TEAMS && ok == true; ++i) {
@@ -201,6 +212,7 @@ int main(int argc, char *argv[]) {
                 buffer[2] = '0' + teams[i]->getSize() / 10;
                 buffer[3] = '0' + teams[i]->getSize() % 10;
                 rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+                //wielkość zamków
                 if (rc < 0) { //write failed
                     ok = false;
                 } else {
@@ -215,9 +227,7 @@ int main(int argc, char *argv[]) {
                 }
                 //stan zamków
                 for (int j = 0; j < teams[i]->getCastle().getSize() && ok == true; ++j) {
-                    //printf("=%d=\n", teams[i]->getCastle().getCard(j)->getSign());
                     buffer[0] = buffer[4] = 'z';
-                    //buffer[1] = '0' + teams[i]->getId();
                     buffer[2] = '0' + teams[i]->getCastle().getCard(j)->getSign() / 10;
                     buffer[3] = '0' + teams[i]->getCastle().getCard(j)->getSign() % 10;
                     rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
@@ -230,7 +240,7 @@ int main(int argc, char *argv[]) {
                     if (table->getCard(j).getSign() == 0) {
                         buffer[0] = buffer[4] = 't';
                         buffer[1] = '0' + j / 10;
-                        buffer[2] = '0' + j / 0;
+                        buffer[2] = '0' + j % 10;
                         buffer[3] = '0';
                         rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
                         if (rc < 0) { //write failed
@@ -249,19 +259,46 @@ int main(int argc, char *argv[]) {
                 }
             }
 
-            if (ok == false) { //write failed
-                perror("write() failed");
-                printf("closing connection...\n");
-                close(fds[nfds].fd);
-                fds[nfds].fd *= -1;
-                teams[teamNumber]->removeFromTeam(nfds);
-            } else {
-                nfds++;
+            //READY R000R do gracza jeśli server is ready else add to ReadyList
+            if (ready == false && ok == true) {
+                readyList.push_back(nfds);
+            } else if (ready == true && ok == true) {
+                buffer[0] = buffer[4] = 'R';
+                rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+                if (rc < 0) {
+                    ok = false;
+                }
             }
 
+            if (ok == false) { //write failed
+                writeError(nfds);
+            } else {
+                nfds++;
+                //do wszystkich że dołączył nowy gracz
+                for (int i = 1; i < nfds - 1; i++) {
+                    buffer[0] = buffer[4] = 's';
+                    buffer[1] = '0' + teams[teamNumber]->getId();
+                    buffer[2] = '0' + teams[teamNumber]->getSize() / 10;
+                    buffer[3] = '0' + teams[teamNumber]->getSize() % 10;
+                    rc = write(fds[i].fd, &buffer, 6 * sizeof (char));
+                    if (rc < 0) {
+                        writeError(i);
+                    }
+                }
+            }
+            //READY (R000R) do wszystkich oczekujących - dodanych wczesniej
             if (ready == false && nfds >= 3 && emptyTeam() == -1) {
                 printf("Server ready for game!\n");
                 ready = true;
+                buffer[0] = buffer[4] = 'R';
+                buffer[1] = buffer[2] = buffer[3] = '0';
+                for (int i = 0; i < readyList.size(); ++i) {
+                    int num = readyList.at(i);
+                    rc = write(fds[num].fd, &buffer, 6 * sizeof (char));
+                    if (rc < 0) { //write failed
+                        writeError(num);
+                    }
+                }
             }
         }
 
@@ -340,6 +377,16 @@ int main(int argc, char *argv[]) {
         //printfTeamsSizes();
         if (ready == true && emptyTeam() != -1) {
             //koniec gry bo pusty team
+            char buffer[6] = {'w', 'i', 'n', '0', 'w', '\n'};
+
+
+            //rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+            //if (rc < 0) { //write failed
+            //    perror("write() failed");
+            //    close_conn = 1;
+            //}
+
+
         }
     }
 
