@@ -1,4 +1,5 @@
 #include "team.hpp"
+#include <cstdio>
 
 Team::Team(int id,char color) {
     this->id = id;
@@ -23,7 +24,7 @@ void Team::addToTeam(int nfds) {
 void Team::removeFromTeam(int nfds) {
     for (int i = 0; i < membersNfds.size(); ++i) {
         if (membersNfds.at(i) == nfds) {
-            //printf("Rem: %d\n",membersNfds.at(i));
+            printf("Team: %d\tRem: %d\n",id,membersNfds.at(i));
             membersNfds.erase(membersNfds.begin() + i);
             this->size-=1;
             break;
@@ -44,7 +45,10 @@ int Team::getSize() {
 void Team::updateNfds(int nfds, int newNfds) {
     for (int i = 0; i < membersNfds.size(); ++i) {
         if (membersNfds.at(i) == nfds) {
-            membersNfds[i]=newNfds;
+            
+            //membersNfds[i]=newNfds;
+            membersNfds.at(i)=newNfds;
+            printf("Team: %d\tUpdate: %d->%d\tActual: %d\n",id,nfds,newNfds,membersNfds.at(i));
             break;
         }
     }
@@ -61,4 +65,11 @@ bool Team::isInTeam(int nfds) {
 
 void Team::addCard(Card card) {
     this->castle.addCard(card);
+}
+
+void Team::printfNfds() {
+    for(int i=0;i<this->size;++i){
+        printf("%d: ",this->membersNfds.at(i));
+    }
+    printf("\n");
 }

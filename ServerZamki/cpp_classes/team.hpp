@@ -18,6 +18,8 @@ public:
     int getId();
     int getSize();
     
+    void printfNfds();
+    
     void addCard(Card card);
     
     void addToTeam(int nfds);

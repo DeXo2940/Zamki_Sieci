@@ -44,6 +44,7 @@ void updateFds() {
         if (fds[i].fd < 0)
             continue;
         fds[nfds] = fds[i];
+        printf("=- %d->%d -=\n", nfds, i);
         for (int j = 0; j < NUMBER_OF_TEAMS; ++j) {
             if (teams[j]->isInTeam(nfds)) {
                 teams[j]->updateNfds(nfds, i);
@@ -123,10 +124,10 @@ void sendToAll(char buffer[], bool toLast) {
     }
 }
 
-int sumSize(){
-    int sum=0;
-    for(int i=0;i<NUMBER_OF_TEAMS;++i){
-        sum+=teams[i]->getSize();
+int sumSize() {
+    int sum = 0;
+    for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
+        sum += teams[i]->getSize();
     }
     return sum;
 }
@@ -164,9 +165,7 @@ int main(int argc, char *argv[]) {
 
     Table* table = new Table();
     //utwórz teamy, nadaj im "kolory"
-    char colors[] = {
-        'r', 'g', 'b', 'y', 'p', 'o', 'w'
-    };
+    char colors[] = {'r', 'g', 'b', 'y', 'p', 'o', 'w'};
     if (NUMBER_OF_TEAMS < 2 || NUMBER_OF_TEAMS>sizeof (colors) / sizeof (*colors)) {
         perror("Can't create teams");
         exit(13);
@@ -244,17 +243,21 @@ int main(int argc, char *argv[]) {
             buffer[1] = '0' + teams[teamNumber]->getId();
             buffer[2] = teams[teamNumber]->getColor();
             rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
-            //liczba teamów
+            //kolor drugiego teamu
             if (rc < 0) { //write failed
                 ok = false;
             } else {
                 buffer[0] = buffer[4] = 'n';
-                buffer[1] = '0' + NUMBER_OF_TEAMS;
-                buffer[2] = buffer[3] = '0';
-                rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
-                if (rc < 0) { //write failed
-                    ok = false;
+                for (int i = 0; i < NUMBER_OF_TEAMS && ok == true; ++i) {
+                    if (teamNumber == i) continue;
+                    buffer[1] = '0' + teams[i]->getId();
+                    buffer[2] = buffer[3] = teams[i]->getColor();
+                    rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+                    if (rc < 0) { //write failed
+                        ok = false;
+                    }
                 }
+
             }
             //ilość graczy w teamach i stan zamków
             for (int i = 0; i < NUMBER_OF_TEAMS && ok == true; ++i) {
@@ -346,6 +349,10 @@ int main(int argc, char *argv[]) {
                     }
                 }
             }
+
+            //printf("=-NFDS: %d\tBelong to team: %d-=\n",nfds-1,teams[teamNumber]->isInTeam(nfds-1));
+
+
         }
 
 
@@ -353,6 +360,8 @@ int main(int argc, char *argv[]) {
 
         for (int i = 1; i < nfds; i++) {
             int close_conn = 0;
+
+
 
             if (fds[i].revents & POLLERR) { //socket error close connection
                 printf("socket error, closing connection...\n");
@@ -375,6 +384,10 @@ int main(int argc, char *argv[]) {
                             buffer[5] = '\n';
                             rc = write(fds[i].fd, &buffer, 6 * sizeof (char));
                             printf("Invalid input\n");
+                            if (rc < 0) { //write failed
+                                perror("write() failed");
+                                close_conn = 1;
+                            }
                         }
                     } else {
 
@@ -396,15 +409,13 @@ int main(int argc, char *argv[]) {
                 printf("closing connection...\n");
                 close(fds[i].fd);
                 fds[i].fd *= -1;
-                char buffer[6];
+                char buffer[6] = {'s', 'i', 'n', 'n', 's', '\n'};
                 for (int j = 0; j < NUMBER_OF_TEAMS; ++j) {
                     if (teams[j]->isInTeam(i)) {
                         teams[j]->removeFromTeam(i);
-                        buffer[0] = buffer[4] = 's';
                         buffer[1] = '0' + teams[j]->getId();
                         buffer[2] = '0' + teams[j]->getSize() / 10;
                         buffer[3] = '0' + teams[j]->getSize() % 10;
-                        buffer[5] = '\n';
                         break;
                     }
                 }
@@ -416,10 +427,13 @@ int main(int argc, char *argv[]) {
 
         updateFds(); //probably useless now here
 
-        if(nfds<sumSize()+1){
+        if (nfds < sumSize() + 1) {
+            for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
+                teams[i]->printfNfds();
+            }
             printf("Widmo...\n");
         }
-        
+
         //printfTeamsSizes();
         if (ready == true && emptyTeam() != -1) {
             //koniec gry bo pusty team
