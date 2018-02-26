@@ -35,6 +35,8 @@ public class Join implements Initializable {
                 Parent pane = loader.load();
                 Controller controller = loader.getController();
                 client.doIt(srv.getText(), Integer.parseInt(port.getText()));
+
+                        //wyjeb wyjątek jak nie ma serwera
                 controller.setClient(client);
                 stage.getScene().setRoot(pane);
                 stage.setHeight(850);

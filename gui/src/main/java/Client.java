@@ -120,7 +120,7 @@ public class Client implements Runnable {
 
             DataOutputStream outToServer = new DataOutputStream(this.socket.getOutputStream());
             BufferedReader inFromServer = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
-            while(!ready) {
+            /*while(!ready) {
                 while (!connected) {
                     while ((fromsrv = inFromServer.readLine()) != null) {
                         System.out.println(fromsrv);
@@ -135,10 +135,17 @@ public class Client implements Runnable {
                             otherTeams = true;
                     }
                 }
+                //@TODO
+                //zamki teamów
+                //karty usunięte z planszy
+
                 fromsrv = inFromServer.readLine();
                 if (fromsrv.equals("READY")) ready = true;
                 else System.out.println("Cierpliwie czekam");
-            }
+            */
+        while(true) {
+            System.out.println(inFromServer.readLine());
+        }
 
         } catch (Exception e) {
             e.printStackTrace();
