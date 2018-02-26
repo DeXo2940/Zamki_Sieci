@@ -6,12 +6,19 @@ public class Team {
     private Integer number;
     private ArrayList<Card> castle;
 
-    public Team (Integer player, String color, Integer number) {
+    public Team (String color, Integer number) {
         players = new ArrayList<>();
-        players.add(player);
         this.color = color;
         this.number = number;
         castle = new ArrayList<>();
+    }
+
+    public Team (Integer player, String color, Integer number) {
+        players = new ArrayList<>();
+        this.color = color;
+        this.number = number;
+        castle = new ArrayList<>();
+        players.add(player);
     }
 
     public ArrayList<Integer> getPlayers() {

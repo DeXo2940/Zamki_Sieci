@@ -37,7 +37,7 @@ public class Client implements Runnable {
 
     public char ifImNew(String communicate) {
         if (communicate.charAt(0) == 't') {
-            this.setTeamNumber((int) communicate.charAt(1));
+            this.setTeamNumber(Character.getNumericValue(communicate.charAt(1)));
             return communicate.charAt(2);
         } else return 'x';
     }
@@ -71,30 +71,26 @@ public class Client implements Runnable {
         } else return -1;
     }
 
-    public boolean connect(String fromsrv) {
-        char temp;
-        String color;
 
-        if (checkCommunicate(fromsrv)) {
-            temp = ifImNew(fromsrv);
-            if (temp != 'x') {
-                switch (temp) {
-                    case 'o':
-                        color = "orange";
-                    case 'r':
-                        color = "red";
-                    case 'g':
-                        color = "green";
-                    default:
-                        color = "white";
-                }
-                Team mine = new Team(1, color, getTeamNumber());
-                game.setMine(mine);
-
-                return true;
-            } else return false;
+    public String color(char color) {
+        switch (color) {
+            case 'o':
+                return "orange";
+            case 'r':
+                return "red";
+            case 'g':
+                return "green";
+            case 'b':
+                return "blue";
+            case 'y':
+                return "yellow";
+            case 'w':
+                return "white";
+            case 'p':
+                return "purple";
+            default:
+                return "transparent";
         }
-        return false;
     }
 
     public boolean howManyPlayers(String communicate) {
@@ -120,32 +116,46 @@ public class Client implements Runnable {
 
             DataOutputStream outToServer = new DataOutputStream(this.socket.getOutputStream());
             BufferedReader inFromServer = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
-            /*while(!ready) {
-                while (!connected) {
-                    while ((fromsrv = inFromServer.readLine()) != null) {
-                        System.out.println(fromsrv);
-                        connected = connect(fromsrv);
-                    }
-                }
-                while (!otherTeams) {
-                    while ((fromsrv = inFromServer.readLine()) != null) {
-                        System.out.println("Czekam na teamy");
-                        howManyPlayers(fromsrv);
-                        if (game.getOpposite().getPlayers().size() > 1 & game.getMine().getPlayers().size() > 1)
-                            otherTeams = true;
-                    }
-                }
-                //@TODO
-                //zamki teamów
-                //karty usunięte z planszy
 
+            boolean proper = false;
+
+            //połącz się, uzupełnij kolor i nr swojego teamu
+            while (!(connected & proper)) {
                 fromsrv = inFromServer.readLine();
-                if (fromsrv.equals("READY")) ready = true;
-                else System.out.println("Cierpliwie czekam");
-            */
-        while(true) {
+                System.out.println(fromsrv);
+                proper = checkCommunicate(fromsrv);
+                if (ifImNew(fromsrv) != 'x') {
+                    connected = true;
+                    Team mine = new Team(1, color(fromsrv.charAt(2)), getTeamNumber());
+                    game.setMine(mine);
+                } else {
+                    //obsluz wyjatek
+                    //@TODO
+                }
+            }
+////////////////////////////////////////////dziala
+            //dostań info ile teamów
+            proper = false;
+            boolean teams = false;
+            while (!(proper & teams)) {
+                Team opposite = null;
+                fromsrv = inFromServer.readLine();
+                System.out.println(fromsrv);
+                proper = checkCommunicate(fromsrv);
+                if (fromsrv.charAt(0) == 'n') {
+                    if (getTeamNumber() == 1) {
+                        opposite = new Team(color(fromsrv.charAt(3)), 2);
+                    } else
+                        opposite = new Team(color(fromsrv.charAt(3)), 1);
+                    game.setOpposite(opposite);
+                    teams = true;
+                }
+            }
+
+            /////////////////////////////////////////////////działa
+
             System.out.println(inFromServer.readLine());
-        }
+
 
         } catch (Exception e) {
             e.printStackTrace();
