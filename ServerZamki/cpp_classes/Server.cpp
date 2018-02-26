@@ -25,6 +25,16 @@ struct pollfd fds[MAX_FDS];
 int nfds = 1;
 
 Team * teams[NUMBER_OF_TEAMS];
+
+void updateFds();
+bool contains(char com[5], char ch);
+bool isValid(char com[5]);
+int emptyTeam();
+void printfTeamSizes();
+void writeError(int number);
+void sendToAll(char buffer[], bool toLast);
+int sumSize();
+
 //update nfds
 
 void updateFds() {
@@ -61,7 +71,7 @@ bool isValid(char com[5]) {
     }
     return false;
 }
-//return empty team iterator
+//return empty team number
 
 int emptyTeam() {
     for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
@@ -72,15 +82,16 @@ int emptyTeam() {
     }
     return -1;
 }
+//print size of each team
 
 void printfTeamsSizes() {
     for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
         printf("Team %d size: %d\n", teams[i]->getId(), teams[i]->getSize());
     }
 }
+//handle error in write()
 
 void writeError(int number) {
-    int rc = 0;
     perror("write() failed");
     printf("closing connection...\n");
     close(fds[number].fd);
@@ -94,16 +105,30 @@ void writeError(int number) {
             buffer[3] = '0' + teams[teamNumber]->getSize() % 10;
             updateFds();
             //do każdej osoby stan teamu z którego ktoś odszedł
-            for (int j = 1; j < nfds; j++) {
-                rc = write(fds[j].fd, &buffer, 6 * sizeof (char));
-                if (rc < 0) { //write failed
-                    updateFds();
-                    writeError(j);
-                }
-            }
+            sendToAll(buffer, true);
             break;
         }
     }
+}
+//send buffer to all connected users
+
+void sendToAll(char buffer[], bool toLast) {
+    int rc = 0;
+    for (int j = 1; (j < nfds && toLast == true) || (toLast == false && j < nfds - 1); j++) {
+        rc = write(fds[j].fd, buffer, 6 * sizeof (char));
+        if (rc < 0) { //write failed
+            updateFds();
+            writeError(j);
+        }
+    }
+}
+
+int sumSize(){
+    int sum=0;
+    for(int i=0;i<NUMBER_OF_TEAMS;++i){
+        sum+=teams[i]->getSize();
+    }
+    return sum;
 }
 
 int main(int argc, char *argv[]) {
@@ -181,8 +206,8 @@ int main(int argc, char *argv[]) {
     fds[0].events = POLLIN;
 
     printf("Server ready!\n");
-
-    while (1) {
+    bool end = false;
+    while (end == false) {
         rc = poll(fds, nfds, POLL_TIMEOUT);
 
         if (rc < 0) { //poll failed
@@ -300,16 +325,12 @@ int main(int argc, char *argv[]) {
             } else {
                 nfds++;
                 //do wszystkich że dołączył nowy gracz
-                for (int i = 1; i < nfds - 1; i++) {
-                    buffer[0] = buffer[4] = 's';
-                    buffer[1] = '0' + teams[teamNumber]->getId();
-                    buffer[2] = '0' + teams[teamNumber]->getSize() / 10;
-                    buffer[3] = '0' + teams[teamNumber]->getSize() % 10;
-                    rc = write(fds[i].fd, &buffer, 6 * sizeof (char));
-                    if (rc < 0) {
-                        writeError(i);
-                    }
-                }
+                buffer[0] = buffer[4] = 's';
+                buffer[1] = '0' + teams[teamNumber]->getId();
+                buffer[2] = '0' + teams[teamNumber]->getSize() / 10;
+                buffer[3] = '0' + teams[teamNumber]->getSize() % 10;
+                sendToAll(buffer, false);
+
             }
             //READY (R000R) do wszystkich oczekujących - dodanych wczesniej
             if (ready == false && nfds >= 3 && emptyTeam() == -1) {
@@ -370,7 +391,8 @@ int main(int argc, char *argv[]) {
                 }
             }
 
-            if (close_conn == 1) { //close connection
+            //close connection
+            if (close_conn == 1) {
                 printf("closing connection...\n");
                 close(fds[i].fd);
                 fds[i].fd *= -1;
@@ -388,33 +410,26 @@ int main(int argc, char *argv[]) {
                 }
                 updateFds();
                 //do każdej osoby stan teamu z którego ktoś odszedł
-                for (int j = 1; j < nfds; j++) {
-                    rc = write(fds[j].fd, &buffer, 6 * sizeof (char));
-                    if (rc < 0) { //write failed
-                        updateFds();
-                        writeError(j);
-                    }
-                }
+                sendToAll(buffer, true);
             }
         }
 
-        updateFds();
+        updateFds(); //probably useless now here
 
+        if(nfds<sumSize()+1){
+            printf("Widmo...\n");
+        }
+        
         //printfTeamsSizes();
         if (ready == true && emptyTeam() != -1) {
             //koniec gry bo pusty team
             char buffer[6] = {'w', 'i', 'n', '0', 'w', '\n'};
-
-
-            //rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
-            //if (rc < 0) { //write failed
-            //    perror("write() failed");
-            //    close_conn = 1;
-            //}
-
-
+            printf("No players in a team.\n");
+            sendToAll(buffer, true);
+            end = true;
         }
     }
+    printf("Server shutdown.\n");
 
     return 0;
 }

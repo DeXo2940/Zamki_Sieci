@@ -23,6 +23,7 @@ void Team::addToTeam(int nfds) {
 void Team::removeFromTeam(int nfds) {
     for (int i = 0; i < membersNfds.size(); ++i) {
         if (membersNfds.at(i) == nfds) {
+            //printf("Rem: %d\n",membersNfds.at(i));
             membersNfds.erase(membersNfds.begin() + i);
             this->size-=1;
             break;
