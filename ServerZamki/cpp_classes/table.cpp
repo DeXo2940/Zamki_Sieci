@@ -8,9 +8,7 @@ Table::Table() {
     this->shuffleTable(10000);
 }
 
-Card Table::getCard(int possition) {
-    return this->table.at(possition);
-}
+
 
 void Table::shuffleTable(int howMuch) {
     int cardPos = 0;
@@ -44,7 +42,12 @@ vector<Card> Table::getTable() {
     return this->table;
 }
 
+Card Table::getCard(int possition) {
+    return this->table.at(possition);
+}
+
 void Table::removeCard(int possition) {
-    this->getCard(possition).setSign(0);
+    //this->table.at(possition).setSign(0);
+    table.erase(table.begin()+possition);
 }
 
