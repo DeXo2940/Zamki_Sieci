@@ -11,7 +11,7 @@ public class Team {
         this.color = color;
         this.number = number;
         castle = new ArrayList<>();
-        System.out.println("Castle size"+castle.size());
+        //System.out.println("Castle size"+castle.size());
     }
 
     public Team (Integer player, String color, Integer number) {
@@ -24,6 +24,11 @@ public class Team {
 
     public void addToCastle(Card c) {
         this.castle.add(c);
+    }
+
+    public void addPlayer() {
+        players.add(players.size());
+
     }
 
     public ArrayList<Integer> getPlayers() {

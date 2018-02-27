@@ -25,7 +25,7 @@ public class Controller implements Initializable {
 
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
-
+        //ustawić listenera na game.gethowmanycards
         endGame.setOnAction((ActionEvent event) -> {
             alert("Pomyślnie dodano klienta");
         });

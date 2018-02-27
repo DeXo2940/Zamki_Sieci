@@ -10,6 +10,7 @@ public class Client implements Runnable {
     private Integer teamNumber = 0;
     private Integer move;
     private Game game;
+    private boolean ready = false;
 
     public Client() {
         this.game = new Game();
@@ -165,20 +166,20 @@ public class Client implements Runnable {
                     if (proper) {
                         signCastle = fromsrv.charAt(0);
                         howManyCards = Character.getNumericValue(fromsrv.charAt(3));
-                        teamNr = fromsrv.charAt(1);
+                        teamNr = Character.getNumericValue(fromsrv.charAt(1));
                     }
                 }
-                System.out.println("Jestem na zewnatrz");
+                //System.out.println("Jestem na zewnatrz");
                 Team team = null;
                 if (game.getMine().getNumber() == teamNr) {
                     team = game.getMine();
                 } else team = game.getOpposite();
 
-                System.out.println("Zameeeek: " + team.getCastle().size());
-                for (int i=1; i<=howManyCards; i++) {
+                //System.out.println("Zameeeek: " + team.getCastle().size());
+                for (int i = 1; i <= howManyCards; i++) {
                     fromsrv = inFromServer.readLine();
                     if (fromsrv.charAt(2) == '0') {
-                        System.out.println("Rozmiar: "+team.getCastle().size());
+                        //System.out.println("Rozmiar: " + team.getCastle().size());
                         team.addToCastle(new Card(Character.getNumericValue(fromsrv.charAt(3))));
                     } else {
                         String nr = "" + fromsrv.charAt(2) + fromsrv.charAt(3);
@@ -188,7 +189,7 @@ public class Client implements Runnable {
 
                 if (team.getCastle().size() == howManyCards) {
                     team1Castle = true;
-                    System.out.println("Jestem gotowy w chuj");
+                    //System.out.println("Jestem gotowy w chuj");
 
                 } else {
                     //obsluzyc wyjatek - powtorzyc komunikat???
@@ -205,20 +206,20 @@ public class Client implements Runnable {
                     if (proper) {
                         signCastle = fromsrv.charAt(0);
                         howManyCards = Character.getNumericValue(fromsrv.charAt(3));
-                        teamNr = fromsrv.charAt(1);
+                        teamNr = Character.getNumericValue(fromsrv.charAt(1));
                     }
                 }
-                System.out.println("Jestem na zewnatrz");
+                //System.out.println("Jestem na zewnatrz");
                 Team team = null;
                 if (game.getMine().getNumber() == teamNr) {
                     team = game.getMine();
                 } else team = game.getOpposite();
 
-                System.out.println("Zameeeek: " + team.getCastle().size());
-                for (int i=1; i<=howManyCards; i++) {
+               // System.out.println("Zameeeek: " + team.getCastle().size());
+                for (int i = 1; i <= howManyCards; i++) {
                     fromsrv = inFromServer.readLine();
                     if (fromsrv.charAt(2) == '0') {
-                        System.out.println("Rozmiar: "+team.getCastle().size());
+                        //System.out.println("Rozmiar: " + team.getCastle().size());
                         team.addToCastle(new Card(Character.getNumericValue(fromsrv.charAt(3))));
                     } else {
                         String nr = "" + fromsrv.charAt(2) + fromsrv.charAt(3);
@@ -228,7 +229,7 @@ public class Client implements Runnable {
 
                 if (team.getCastle().size() == howManyCards) {
                     team2Castle = true;
-                    System.out.println("Jestem gotowy w chuj");
+                    //System.out.println("Jestem gotowy w chuj");
 
                 } else {
                     //obsluzyc wyjatek - powtorzyc komunikat???
@@ -239,16 +240,47 @@ public class Client implements Runnable {
                 if (checkCommunicate(fromsrv) & fromsrv.charAt(0) == 'j') {
                     String nr = "" + fromsrv.charAt(1) + fromsrv.charAt(2);
                     game.setHowManyCards(Integer.parseInt(nr));
-                    System.out.println("Koniec, jestem mega gotowy");
+                    //System.out.println("Koniec, jestem mega gotowy");
                 }
             }
 
             ///jestem gotowyyyyyyy
 
+            //////////////////////koniec inicjalizacji
+
+
+            while (true) {
+                while ((fromsrv = inFromServer.readLine()) != null) {
+                    System.out.println(fromsrv);
+                    if (checkCommunicate(fromsrv)) {
+                        switch (fromsrv.charAt(0)) {
+                            case 's': {
+                                Team team = chooseTeam(Character.getNumericValue(fromsrv.charAt(1)));
+                                System.out.println("Rozmiar teamu: "+team.getPlayers().size());
+                                while(team.getPlayers().size() < Character.getNumericValue(fromsrv.charAt(3))) {
+                                    team.addPlayer();
+                                    System.out.println("Dodałem gracza!");
+                                }
+                            }
+                            case 'R': {
+                                setReady(true);
+                                System.out.println("Jestem gotowy");
+                            }
+                        }
+                    }
+                    ///aktualizuje graczy w teamie
+                }
+            }
+
 
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public Team chooseTeam(Integer number) {
+        if (this.getTeamNumber() == number) return this.game.getMine();
+        else return this.game.getOpposite();
     }
 
     public Integer getTeamNumber() {
@@ -257,5 +289,13 @@ public class Client implements Runnable {
 
     public void setTeamNumber(Integer teamNumber) {
         this.teamNumber = teamNumber;
+    }
+
+    public boolean isReady() {
+        return ready;
+    }
+
+    public void setReady(boolean ready) {
+        this.ready = ready;
     }
 }
