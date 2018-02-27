@@ -10,7 +10,7 @@ Table::Table() {
 
 void Table::shuffleTable(int howMuch) {
     int cardPos = 0;
-    Card* tmpCard = NULL;
+    Card* tmpCard = new Card(0);
     for (int i = 0; i < howMuch; ++i) {
         cardPos = rand() % this->table.size();
         *tmpCard = this->getCard(cardPos);

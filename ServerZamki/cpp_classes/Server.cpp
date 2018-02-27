@@ -24,7 +24,6 @@
 struct pollfd fds[MAX_FDS];
 int nfds = 1;
 Team * teams[NUMBER_OF_TEAMS];
-Table* table;
 vector<int> readyList;
 bool ready = false;
 
@@ -38,7 +37,7 @@ void sendToAll(char buffer[], bool toLast);
 int sumSize();
 void sendToTeam(char buffer[], int teamNumber);
 int getReadyMrServer(int argc, char *argv[]);
-bool acceptNew(int listen_desc);
+bool acceptNew(int listen_desc, int tableSize);
 //update fds
 
 void updateFds() {
@@ -93,8 +92,9 @@ void printfTeamsSizes() {
         printf("Team %d size: %d\n", teams[i]->getId(), teams[i]->getSize());
     }
 }
+//handle accepting new connection
 
-bool acceptNew(int listen_desc) {
+bool acceptNew(int listen_desc, int tableSize) {
     int new_desc = accept(listen_desc, NULL, NULL);
     bool ok = true;
     if (new_desc < 0) {
@@ -167,8 +167,8 @@ bool acceptNew(int listen_desc) {
     }
     //stan stołu - ilość kart
     buffer[0] = buffer[4] = 'j';
-    buffer[1] = '0' + table->getSize() / 10;
-    buffer[2] = '0' + table->getSize() % 10;
+    buffer[1] = '0' + tableSize / 10;
+    buffer[2] = '0' + tableSize % 10;
     buffer[3] = '0';
     rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
     if (rc < 0) { //write failed
@@ -221,7 +221,6 @@ bool acceptNew(int listen_desc) {
     }
     return true;
 }
-
 //handle error in write()
 
 void writeError(int number, bool isErrror) {
@@ -278,6 +277,7 @@ int sumSize() {
     }
     return sum;
 }
+//prepare Server to run
 
 int getReadyMrServer(int argc, char *argv[]) {
     short server_port = SERVER_PORT;
@@ -291,6 +291,7 @@ int getReadyMrServer(int argc, char *argv[]) {
             exit(1);
         }
     }
+
     int listen_desc = socket(AF_INET, SOCK_STREAM, 0);
     if (listen_desc < 0) { //socket failed
         perror("socket() failed");
@@ -321,17 +322,18 @@ int getReadyMrServer(int argc, char *argv[]) {
     }
     fds[0].fd = listen_desc;
     fds[0].events = POLLIN;
+    printf("Server run on %d port.\n", server_port);
     return listen_desc;
 }
 
 int main(int argc, char *argv[]) {
     //int team = 0;
     //int phase = 0;
-
     int rc;
     int listen_desc = getReadyMrServer(argc, argv);
-
-    table = new Table();
+    
+    Table* table = new Table();
+    
     //utwórz teamy, nadaj im "kolory"
     char colors[] = {'r', 'g', 'b', 'y', 'p', 'o', 'w'};
     if (NUMBER_OF_TEAMS < 2 || NUMBER_OF_TEAMS > 4 || NUMBER_OF_TEAMS>sizeof (colors) / sizeof (*colors)) {
@@ -352,7 +354,7 @@ int main(int argc, char *argv[]) {
         }
         printf("Team: %d\tColor: %c\n", teams[i]->getId(), teams[i]->getColor());
     }
-    printf("Server ready!\n");
+    printf("Server ready to play!\n");
 
     bool end = false;
     while (end == false) {
@@ -367,15 +369,15 @@ int main(int argc, char *argv[]) {
         }
         //accept new connection
         if (fds[0].revents & POLLIN) {
-            end = acceptNew(listen_desc);
+            end = !acceptNew(listen_desc, table->getSize());
             if (end == true) {
+                //perror accep falied
                 break;
             }
         }
 
         for (int i = 1; i < nfds; i++) {
             int close_conn = 0;
-
             if (fds[i].revents & POLLERR) { //socket error close connection
                 printf("socket error, closing connection...\n");
                 close_conn = 1;
