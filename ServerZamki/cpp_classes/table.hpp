@@ -15,6 +15,8 @@ public:
     vector<Card> getTable();
     Card getCard(int possition);
     void printCards(char how);
+    int getSize();
+    void removeCard(int possition);
 private:
     void shuffleTable(int howMuch);
 };
