@@ -11,6 +11,7 @@ public class Team {
         this.color = color;
         this.number = number;
         castle = new ArrayList<>();
+        System.out.println("Castle size"+castle.size());
     }
 
     public Team (Integer player, String color, Integer number) {

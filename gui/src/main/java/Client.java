@@ -174,23 +174,28 @@ public class Client implements Runnable {
                     team = game.getMine();
                 } else team = game.getOpposite();
 
-                for (int i = 0; i < howManyCards; i++) {
+                System.out.println("Zameeeek: " + team.getCastle().size());
+                for (int i=1; i<=howManyCards; i++) {
                     fromsrv = inFromServer.readLine();
-                    if (fromsrv.charAt(2) == 0) {
+                    if (fromsrv.charAt(2) == '0') {
+                        System.out.println("Rozmiar: "+team.getCastle().size());
                         team.addToCastle(new Card(Character.getNumericValue(fromsrv.charAt(3))));
                     } else {
                         String nr = "" + fromsrv.charAt(2) + fromsrv.charAt(3);
                         team.addToCastle(new Card(Integer.parseInt(nr)));
                     }
                 }
+
                 if (team.getCastle().size() == howManyCards) {
                     team1Castle = true;
+                    System.out.println("Jestem gotowy w chuj");
 
                 } else {
                     //obsluzyc wyjatek - powtorzyc komunikat???
                 }
             }
 
+            //dziaua////////////////////////////////////////////////////////////////////////////////////////////////
             while (!(proper & team2Castle)) {
                 char sign = 'c', signCastle = 'x';
                 int howManyCards = 0, teamNr = 0;
@@ -208,31 +213,30 @@ public class Client implements Runnable {
                 if (game.getMine().getNumber() == teamNr) {
                     team = game.getMine();
                 } else team = game.getOpposite();
-                System.out.println(howManyCards);
 
-                for (int i = 0; i < howManyCards; i++) {
+                System.out.println("Zameeeek: " + team.getCastle().size());
+                for (int i=1; i<=howManyCards; i++) {
                     fromsrv = inFromServer.readLine();
-                    if (fromsrv.charAt(2) == 0) {
+                    if (fromsrv.charAt(2) == '0') {
+                        System.out.println("Rozmiar: "+team.getCastle().size());
                         team.addToCastle(new Card(Character.getNumericValue(fromsrv.charAt(3))));
                     } else {
                         String nr = "" + fromsrv.charAt(2) + fromsrv.charAt(3);
                         team.addToCastle(new Card(Integer.parseInt(nr)));
                     }
                 }
-                System.out.println(team.getCastle().size()); ///////coś nie tak
+
                 if (team.getCastle().size() == howManyCards) {
                     team2Castle = true;
-                    System.out.println("Jest superowo");
+                    System.out.println("Jestem gotowy w chuj");
 
                 } else {
                     //obsluzyc wyjatek - powtorzyc komunikat???
                 }
             }
 
-            ////////umarły tu koty :(
-
-            while(!(fromsrv = inFromServer.readLine()).equals("x000x")) {
-                if(checkCommunicate(fromsrv) & fromsrv.charAt(0) == 'j') {
+            while (!(fromsrv = inFromServer.readLine()).equals("x000x")) {
+                if (checkCommunicate(fromsrv) & fromsrv.charAt(0) == 'j') {
                     String nr = "" + fromsrv.charAt(1) + fromsrv.charAt(2);
                     game.setHowManyCards(Integer.parseInt(nr));
                     System.out.println("Koniec, jestem mega gotowy");
