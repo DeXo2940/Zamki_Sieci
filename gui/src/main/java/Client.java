@@ -154,7 +154,92 @@ public class Client implements Runnable {
 
             /////////////////////////////////////////////////działa
 
-            System.out.println(inFromServer.readLine());
+            boolean team1Castle = false, team2Castle = false;
+
+            while (!(proper & team1Castle)) {
+                char sign = 'c', signCastle = 'x';
+                int howManyCards = 0, teamNr = 0;
+                while (signCastle != sign) {
+                    fromsrv = inFromServer.readLine();
+                    proper = checkCommunicate(fromsrv);
+                    if (proper) {
+                        signCastle = fromsrv.charAt(0);
+                        howManyCards = Character.getNumericValue(fromsrv.charAt(3));
+                        teamNr = fromsrv.charAt(1);
+                    }
+                }
+                System.out.println("Jestem na zewnatrz");
+                Team team = null;
+                if (game.getMine().getNumber() == teamNr) {
+                    team = game.getMine();
+                } else team = game.getOpposite();
+
+                for (int i = 0; i < howManyCards; i++) {
+                    fromsrv = inFromServer.readLine();
+                    if (fromsrv.charAt(2) == 0) {
+                        team.addToCastle(new Card(Character.getNumericValue(fromsrv.charAt(3))));
+                    } else {
+                        String nr = "" + fromsrv.charAt(2) + fromsrv.charAt(3);
+                        team.addToCastle(new Card(Integer.parseInt(nr)));
+                    }
+                }
+                if (team.getCastle().size() == howManyCards) {
+                    team1Castle = true;
+
+                } else {
+                    //obsluzyc wyjatek - powtorzyc komunikat???
+                }
+            }
+
+            while (!(proper & team2Castle)) {
+                char sign = 'c', signCastle = 'x';
+                int howManyCards = 0, teamNr = 0;
+                while (signCastle != sign) {
+                    fromsrv = inFromServer.readLine();
+                    proper = checkCommunicate(fromsrv);
+                    if (proper) {
+                        signCastle = fromsrv.charAt(0);
+                        howManyCards = Character.getNumericValue(fromsrv.charAt(3));
+                        teamNr = fromsrv.charAt(1);
+                    }
+                }
+                System.out.println("Jestem na zewnatrz");
+                Team team = null;
+                if (game.getMine().getNumber() == teamNr) {
+                    team = game.getMine();
+                } else team = game.getOpposite();
+                System.out.println(howManyCards);
+
+                for (int i = 0; i < howManyCards; i++) {
+                    fromsrv = inFromServer.readLine();
+                    if (fromsrv.charAt(2) == 0) {
+                        team.addToCastle(new Card(Character.getNumericValue(fromsrv.charAt(3))));
+                    } else {
+                        String nr = "" + fromsrv.charAt(2) + fromsrv.charAt(3);
+                        team.addToCastle(new Card(Integer.parseInt(nr)));
+                    }
+                }
+                System.out.println(team.getCastle().size()); ///////coś nie tak
+                if (team.getCastle().size() == howManyCards) {
+                    team2Castle = true;
+                    System.out.println("Jest superowo");
+
+                } else {
+                    //obsluzyc wyjatek - powtorzyc komunikat???
+                }
+            }
+
+            ////////umarły tu koty :(
+
+            while(!(fromsrv = inFromServer.readLine()).equals("x000x")) {
+                if(checkCommunicate(fromsrv) & fromsrv.charAt(0) == 'j') {
+                    String nr = "" + fromsrv.charAt(1) + fromsrv.charAt(2);
+                    game.setHowManyCards(Integer.parseInt(nr));
+                    System.out.println("Koniec, jestem mega gotowy");
+                }
+            }
+
+            ///jestem gotowyyyyyyy
 
 
         } catch (Exception e) {

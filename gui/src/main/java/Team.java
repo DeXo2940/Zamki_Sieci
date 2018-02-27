@@ -21,6 +21,10 @@ public class Team {
         players.add(player);
     }
 
+    public void addToCastle(Card c) {
+        this.castle.add(c);
+    }
+
     public ArrayList<Integer> getPlayers() {
         return players;
     }
