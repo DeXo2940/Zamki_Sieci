@@ -1,7 +1,12 @@
+import javafx.beans.Observable;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Random;
 
 public class Client implements Runnable {
 
@@ -9,6 +14,16 @@ public class Client implements Runnable {
     private Socket socket;
     private Integer teamNumber = 0;
     private Integer move;
+    private boolean ifMyMove = false;
+
+    public Game getGame() {
+        return game;
+    }
+
+    public void setGame(Game game) {
+        this.game = game;
+    }
+
     private Game game;
     private boolean ready = false;
 
@@ -32,46 +47,12 @@ public class Client implements Runnable {
         return false;
     }
 
-    public void getMessage() {
-
-    }
-
     public char ifImNew(String communicate) {
         if (communicate.charAt(0) == 't') {
             this.setTeamNumber(Character.getNumericValue(communicate.charAt(1)));
             return communicate.charAt(2);
         } else return 'x';
     }
-
-    public boolean ifWaiting(String communicate) {
-        if (communicate.charAt(0) == 'w') {
-            //wait
-            return true;
-        } else {
-            if (communicate.charAt(0) == 'm') return false;
-        }
-        return true;
-    }
-
-    public boolean ifMyMove(String communicate) {
-        if (communicate.charAt(0) == 'd') return true;
-        else return false;
-    }
-
-    public boolean ifEnd(String communicate) {
-        if (communicate.charAt(0) == 'x') return true;
-        else return false;
-    }
-
-    public int whoWin(String communicate) {
-        if (communicate.charAt(0) == 'u') {
-            if ((int) communicate.charAt(4) == this.getTeamNumber()) {
-                //yes you win
-                return this.getTeamNumber();
-            } else return (int) communicate.charAt(4);
-        } else return -1;
-    }
-
 
     public String color(char color) {
         switch (color) {
@@ -92,19 +73,6 @@ public class Client implements Runnable {
             default:
                 return "transparent";
         }
-    }
-
-    public boolean howManyPlayers(String communicate) {
-        if (communicate.charAt(0) == 's') {
-            if (communicate.charAt(1) == this.getTeamNumber()) {
-                for (int i = 2; i <= communicate.charAt(3); i++) game.getMine().getPlayers().add(i);
-                return true;
-            } else if (communicate.charAt(1) == 2) {
-                for (int i = 1; i < communicate.charAt(3); i++) game.getOpposite().getPlayers().add(i);
-                return true;
-            } else return false;
-
-        } else return false;
     }
 
     @Override
@@ -238,8 +206,11 @@ public class Client implements Runnable {
 
             while (!(fromsrv = inFromServer.readLine()).equals("x000x")) {
                 if (checkCommunicate(fromsrv) & fromsrv.charAt(0) == 'j') {
+                    System.out.println("K: "+fromsrv);
                     String nr = "" + fromsrv.charAt(1) + fromsrv.charAt(2);
+                    System.out.println("Wartosc: "+nr);
                     game.setHowManyCards(Integer.parseInt(nr));
+                    System.out.println(game.getHowManyCards());
                     //System.out.println("Koniec, jestem mega gotowy");
                 }
             }
@@ -254,27 +225,61 @@ public class Client implements Runnable {
                     System.out.println(fromsrv);
                     if (checkCommunicate(fromsrv)) {
                         switch (fromsrv.charAt(0)) {
-                            case 's': {
-                                Team team = chooseTeam(Character.getNumericValue(fromsrv.charAt(1)));
-                                System.out.println("Rozmiar teamu: "+team.getPlayers().size());
-                                while(team.getPlayers().size() < Character.getNumericValue(fromsrv.charAt(3))) {
-                                    team.addPlayer();
-                                    System.out.println("Dodałem gracza!");
-                                }
-                            }
-                            case 'R': {
+                            case 's': addPlayer(fromsrv); break;
+                            case 'R':
                                 setReady(true);
                                 System.out.println("Jestem gotowy");
-                            }
+                                break;
+                            case 'j': howManyCards(fromsrv); break;
+                            case 'W': whoWin(fromsrv); break;
+                            case 'e': handleError(); break;
+                            case 'd': move(); break;
+                            case 'w': waitForIt(); break;
+                            case 'm': break;
                         }
                     }
                     ///aktualizuje graczy w teamie
+
                 }
             }
 
 
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public void chooseCard(int id) {
+        System.out.println("Id wybranej karty: "+ id);
+    }
+
+    public void waitForIt() {
+    }
+
+    public void move() {
+
+    }
+
+    public void handleError() {
+        //@TODO
+    }
+
+    public void whoWin(String fromsrv) {
+        Integer id = Character.getNumericValue(fromsrv.charAt(3));
+        game.setWinnerTeamId(id);
+    }
+
+    public void howManyCards(String fromsrv) {
+        String nr = "" + fromsrv.charAt(1) + fromsrv.charAt(2);
+        game.setHowManyCards(Integer.parseInt(nr));
+    }
+
+    public void addPlayer(String fromsrv) {
+        Team team = chooseTeam(Character.getNumericValue(fromsrv.charAt(1)));
+        System.out.println("Rozmiar teamu: " + team.getPlayers().size());
+        while (team.getPlayers().size() < Character.getNumericValue(fromsrv.charAt(3))) {
+            team.addPlayer();
+            System.out.println("Dodałem gracza!");
         }
     }
 
@@ -297,5 +302,13 @@ public class Client implements Runnable {
 
     public void setReady(boolean ready) {
         this.ready = ready;
+    }
+
+    public boolean ifMyMove() {
+        return ifMyMove;
+    }
+
+    public void setIfMyMove(boolean ifMyMove) {
+        this.ifMyMove = ifMyMove;
     }
 }

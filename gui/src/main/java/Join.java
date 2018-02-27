@@ -40,7 +40,7 @@ public class Join implements Initializable {
                 controller.setClient(client);
                 stage.getScene().setRoot(pane);
                 stage.setHeight(850);
-                stage.setWidth(1120);
+                stage.setWidth(1150);
                 stage.centerOnScreen();
 
             } catch (Exception e) {

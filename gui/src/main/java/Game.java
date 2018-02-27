@@ -1,21 +1,23 @@
-import java.util.ArrayList;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 
 public class Game {
     private Team mine, opposite;
-    private Integer howManyCards;
+    private IntegerProperty howManyCards = new SimpleIntegerProperty();
+    private Integer winnerTeamId = 0;
 
-    public Game () {
-        howManyCards = 0;
+    public Game() {
+        howManyCards.setValue(0);
     }
 
 
-
-    public Integer getHowManyCards() {
-        return howManyCards;
+    public int getHowManyCards() {
+        return howManyCards.get();
     }
+    public IntegerProperty getHowManyCardsProperty() {return howManyCards;}
 
-    public void setHowManyCards(Integer howManyCards) {
-        this.howManyCards = howManyCards;
+    public void setHowManyCards(Integer howMany) {
+            this.howManyCards.setValue(howMany);
     }
 
     public Team getMine() {
@@ -32,5 +34,13 @@ public class Game {
 
     public void setOpposite(Team opposite) {
         this.opposite = opposite;
+    }
+
+    public Integer getWinnerTeamId() {
+        return winnerTeamId;
+    }
+
+    public void setWinnerTeamId(Integer winnerTeamId) {
+        this.winnerTeamId = winnerTeamId;
     }
 }

@@ -1,4 +1,6 @@
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -10,6 +12,7 @@ import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
+import javax.swing.*;
 import java.io.IOException;
 
 public class Main extends Application {
@@ -28,25 +31,22 @@ public class Main extends Application {
         this.primaryStage = primaryStage;
         Join controller = new Join(primaryStage);
         loader.setController(controller);
+
         AnchorPane root = loader.load();
         Scene scene = new Scene(root);
         primaryStage.setTitle("Hello World");
         primaryStage.setScene(scene);
         primaryStage.show();
 
-
     }
 
+    @Override
+    public void stop(){
+
+    }
 
     public static void main(String[] args) {
         launch(args);
     }
 
-    public int getSceneNr() {
-        return sceneNr;
-    }
-
-    public void setSceneNr(int sceneNr) {
-        this.sceneNr = sceneNr;
-    }
 }
