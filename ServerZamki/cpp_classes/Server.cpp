@@ -329,11 +329,12 @@ int getReadyMrServer(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
     //int team = 0;
     //int phase = 0;
+    srand(time(NULL));
     int rc;
     int listen_desc = getReadyMrServer(argc, argv);
-    
+
     Table* table = new Table();
-    
+
     //utwórz teamy, nadaj im "kolory"
     char colors[] = {'r', 'g', 'b', 'y', 'p', 'o', 'w'};
     if (NUMBER_OF_TEAMS < 2 || NUMBER_OF_TEAMS > 4 || NUMBER_OF_TEAMS>sizeof (colors) / sizeof (*colors)) {

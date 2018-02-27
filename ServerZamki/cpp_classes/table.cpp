@@ -1,7 +1,6 @@
 #include "table.hpp"
 
 Table::Table() {
-    srand(time(NULL));
     for (int i = 2; i < 47; ++i) {
         this->table.push_back(*new Card(i));
     }
