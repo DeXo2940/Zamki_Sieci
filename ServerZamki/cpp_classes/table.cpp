@@ -8,11 +8,9 @@ Table::Table() {
     this->shuffleTable(10000);
 }
 
-
-
 void Table::shuffleTable(int howMuch) {
     int cardPos = 0;
-    Card* tmpCard;
+    Card* tmpCard = NULL;
     for (int i = 0; i < howMuch; ++i) {
         cardPos = rand() % this->table.size();
         *tmpCard = this->getCard(cardPos);
@@ -23,11 +21,11 @@ void Table::shuffleTable(int howMuch) {
 
 void Table::printCards(char how) {
     if (how == 'n') {
-        for (int i = 0; i<this->table.size(); ++i) {
+        for (unsigned int i = 0; i<this->table.size(); ++i) {
             printf("%d ", this->getCard(i).getSign());
         }
     } else {
-        for (int i = 0; i<this->table.size(); ++i) {
+        for (unsigned int i = 0; i<this->table.size(); ++i) {
             printf("Karta %d:\t%d\n", i, this->getCard(i).getSign());
         }
     }
@@ -48,6 +46,6 @@ Card Table::getCard(int possition) {
 
 void Table::removeCard(int possition) {
     //this->table.at(possition).setSign(0);
-    table.erase(table.begin()+possition);
+    table.erase(table.begin() + possition);
 }
 

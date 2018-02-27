@@ -22,7 +22,7 @@ void Team::addToTeam(int nfds) {
 }
 
 void Team::removeFromTeam(int nfds) {
-    for (int i = 0; i < membersNfds.size(); ++i) {
+    for (unsigned int i = 0; i < membersNfds.size(); ++i) {
         if (membersNfds.at(i) == nfds) {
             //printf("Team: %d\tRem: %d\n",id,membersNfds.at(i));
             membersNfds.erase(membersNfds.begin() + i);
@@ -41,7 +41,7 @@ int Team::getSize() {
 }
 
 void Team::updateNfds(int nfds, int newNfds) {
-    for (int i = 0; i < membersNfds.size(); ++i) {
+    for (unsigned int i = 0; i < membersNfds.size(); ++i) {
         if (membersNfds.at(i) == nfds) {
 
             //membersNfds[i]=newNfds;
@@ -53,7 +53,7 @@ void Team::updateNfds(int nfds, int newNfds) {
 }
 
 bool Team::isInTeam(int nfds) {
-    for (int i = 0; i < membersNfds.size(); ++i) {
+    for (unsigned int i = 0; i < membersNfds.size(); ++i) {
         if (membersNfds.at(i) == nfds) {
             return true;
         }
@@ -66,7 +66,7 @@ void Team::addCard(Card card) {
 }
 
 void Team::printfNfds() {
-    for (int i = 0; i<this->size; ++i) {
+    for (unsigned int i = 0; i<this->membersNfds.size(); ++i) {
         printf("%d: ", this->membersNfds.at(i));
     }
     printf("\n");

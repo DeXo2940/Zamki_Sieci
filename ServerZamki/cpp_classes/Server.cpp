@@ -28,7 +28,6 @@ Table* table;
 vector<int> readyList;
 bool ready = false;
 
-bool acceptNew();
 void updateFds();
 bool contains(char com[5], char ch);
 bool isValid(char com[5]);
@@ -39,6 +38,7 @@ void sendToAll(char buffer[], bool toLast);
 int sumSize();
 void sendToTeam(char buffer[], int teamNumber);
 int getReadyMrServer(int argc, char *argv[]);
+bool acceptNew(int listen_desc);
 //update fds
 
 void updateFds() {
@@ -48,7 +48,7 @@ void updateFds() {
         if (fds[i].fd < 0)
             continue;
         fds[nfds] = fds[i];
-        for (int j = 0; j < NUMBER_OF_TEAMS; ++j) {
+        for (unsigned int j = 0; j < NUMBER_OF_TEAMS; ++j) {
             if (teams[j]->isInTeam(i)) {
                 teams[j]->updateNfds(i, nfds);
                 break;
@@ -78,7 +78,7 @@ bool isValid(char com[5]) {
 //return empty team number
 
 int emptyTeam() {
-    for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
+    for (unsigned int i = 0; i < NUMBER_OF_TEAMS; ++i) {
         if (teams[i]->getSize() == 0) {
             //printf("Empty team: %d\n", teams[i]->getId());
             return i;
@@ -89,12 +89,12 @@ int emptyTeam() {
 //print size of each team
 
 void printfTeamsSizes() {
-    for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
+    for (unsigned int i = 0; i < NUMBER_OF_TEAMS; ++i) {
         printf("Team %d size: %d\n", teams[i]->getId(), teams[i]->getSize());
     }
 }
 
-bool acceptNew() {
+bool acceptNew(int listen_desc) {
     int new_desc = accept(listen_desc, NULL, NULL);
     bool ok = true;
     if (new_desc < 0) {
@@ -106,7 +106,7 @@ bool acceptNew() {
     fds[nfds].events = POLLIN;
     fds[nfds].revents = 0;
     //dołącz do drużyny
-    int teamNumber;
+    unsigned int teamNumber;
     for (teamNumber = 1; teamNumber < NUMBER_OF_TEAMS; ++teamNumber) {
         if (teams[teamNumber - 1]->getSize() <= teams[teamNumber]->getSize()) {
             break;
@@ -124,7 +124,7 @@ bool acceptNew() {
         ok = false;
     } else {
         buffer[0] = buffer[4] = 'n';
-        for (int i = 0; i < NUMBER_OF_TEAMS && ok == true; ++i) {
+        for (unsigned int i = 0; i < NUMBER_OF_TEAMS && ok == true; ++i) {
             if (teamNumber == i) continue;
             buffer[1] = '0' + teams[i]->getId();
             buffer[2] = buffer[3] = teams[i]->getColor();
@@ -135,7 +135,7 @@ bool acceptNew() {
         }
     }
     //ilość graczy w teamach i stan zamków
-    for (int i = 0; i < NUMBER_OF_TEAMS && ok == true; ++i) {
+    for (unsigned int i = 0; i < NUMBER_OF_TEAMS && ok == true; ++i) {
         buffer[0] = buffer[4] = 's';
         buffer[1] = '0' + teams[i]->getId();
         buffer[2] = '0' + teams[i]->getSize() / 10;
@@ -211,7 +211,7 @@ bool acceptNew() {
         ready = true;
         buffer[0] = buffer[4] = 'R';
         buffer[1] = buffer[2] = buffer[3] = '0';
-        for (int i = 0; i < readyList.size(); ++i) {
+        for (unsigned int i = 0; i < readyList.size(); ++i) {
             int num = readyList.at(i);
             rc = write(fds[num].fd, &buffer, 6 * sizeof (char));
             if (rc < 0) { //write failed
@@ -231,7 +231,7 @@ void writeError(int number, bool isErrror) {
     printf("closing connection...\n");
     close(fds[number].fd);
     fds[number].fd *= -1;
-    for (int teamNumber = 0; teamNumber < NUMBER_OF_TEAMS; ++teamNumber) {
+    for (unsigned int teamNumber = 0; teamNumber < NUMBER_OF_TEAMS; ++teamNumber) {
         if (teams[teamNumber]->isInTeam(number)) {
             teams[teamNumber]->removeFromTeam(number);
             char buffer[6] = {'s', 't', 'n', 'n', 's', '\n'};
@@ -273,7 +273,7 @@ void sendToTeam(char buffer[], int teamNumber) {
 
 int sumSize() {
     int sum = 0;
-    for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
+    for (unsigned int i = 0; i < NUMBER_OF_TEAMS; ++i) {
         sum += teams[i]->getSize();
     }
     return sum;
@@ -338,13 +338,13 @@ int main(int argc, char *argv[]) {
         perror("Can't create teams");
         exit(13);
     }
-    for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
+    for (unsigned int i = 0; i < NUMBER_OF_TEAMS; ++i) {
         char color;
         do {
             color = colors[rand() % sizeof (colors) / sizeof (*colors)];
         } while (color == 0);
         teams[i] = new Team(i + 1, color);
-        for (int j = 0; j<sizeof (colors) / sizeof (*colors); ++j) {
+        for (unsigned int j = 0; j<sizeof (colors) / sizeof (*colors); ++j) {
             if (colors[j] == color) {
                 colors[j] = 0;
                 break;
@@ -367,7 +367,7 @@ int main(int argc, char *argv[]) {
         }
         //accept new connection
         if (fds[0].revents & POLLIN) {
-            end = acceptNew();
+            end = acceptNew(listen_desc);
             if (end == true) {
                 break;
             }
@@ -423,7 +423,7 @@ int main(int argc, char *argv[]) {
         if (nfds < sumSize() + 1) {
             printf("Widmo...\n");
             perror("phantom Player\n");
-            for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
+            for (unsigned int i = 0; i < NUMBER_OF_TEAMS; ++i) {
                 printf("Team: %d\t", teams[i]->getId());
                 teams[i]->printfNfds();
             }
