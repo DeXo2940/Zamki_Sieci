@@ -76,3 +76,16 @@ int Team::getMember(int possition) {
     return membersNfds.at(possition);
 }
 
+int Team::getTurn() {
+    if (turn >= size) {
+        turn = 0;
+    }
+    return turn;
+}
+
+void Team::incTurn() {
+    turn += 1;
+    if (turn >= size) {
+        turn = 0;
+    }
+}

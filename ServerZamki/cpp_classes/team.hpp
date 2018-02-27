@@ -12,11 +12,14 @@ class Team {
     vector<int> membersNfds;
     int size;
     Castle castle;
+    int turn;
 public:
     Team(int id,char color);
     char getColor();
     int getId();
     int getSize();
+    int getTurn();
+    void incTurn();
     
     void printfNfds();
     
