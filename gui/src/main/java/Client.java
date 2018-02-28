@@ -16,6 +16,7 @@ public class Client implements Runnable {
     private BooleanProperty vote = new SimpleBooleanProperty();
     private Integer actualCard;
     private boolean ifMyMove = false;
+    private BooleanProperty castleChange = new SimpleBooleanProperty();
 
     public Game getGame() {
         return game;
@@ -293,12 +294,21 @@ public class Client implements Runnable {
                             case 'V':
                                 setVote(true);
                                 System.out.println("Uaktywniam głosowanie ");
+                                setVote(false);
                                 break;
                             case 'c':
                                 System.out.println("Uaktualniam zamek");
                                 break;
                             case 'z':
                                 System.out.println("Zamek zameczek zamkuś");
+                                Integer id = Integer.valueOf(fromsrv.charAt(1));
+                                String c = "" + fromsrv.charAt(2) + fromsrv.charAt(3);
+                                if(getTeamNumber() == id) {
+                                    getGame().getMine().addToCastle(new Card(Integer.valueOf(c)));
+                                }
+                                else getGame().getOpposite().addToCastle(new Card(Integer.valueOf(c)));
+
+                                setCastleChange(true);
                             case 'g':
                                 Integer cards = getGame().getHowManyCards() - 1;
                                 getGame().setHowManyCards(cards);
@@ -440,5 +450,21 @@ public class Client implements Runnable {
 
     public Socket getSocket() {
         return socket;
+    }
+
+    public boolean isCastleChange() {
+        return castleChange.get();
+    }
+
+    public BooleanProperty castleChangeProperty() {
+        return castleChange;
+    }
+
+    public Boolean getCastleChange() {
+        return castleChange.get();
+    }
+
+    public void setCastleChange(boolean castleChange) {
+        this.castleChange.set(castleChange);
     }
 }

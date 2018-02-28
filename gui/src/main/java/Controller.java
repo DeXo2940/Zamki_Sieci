@@ -42,6 +42,7 @@ public class Controller implements Initializable {
     private RadioButton our, their;
     @FXML
     private Label teamLabel;
+    final ToggleGroup group = new ToggleGroup();
 
 
     public void alert(String text) {
@@ -104,7 +105,7 @@ public class Controller implements Initializable {
 
         });
 
-        final ToggleGroup group = new ToggleGroup();
+
 
         our.setToggleGroup(group);
         their.setToggleGroup(group);
@@ -234,6 +235,7 @@ public class Controller implements Initializable {
                                     if (result.get() == buttonTypeOne) {
                                         System.out.println("Dodano kartę do zamku");
                                         client.vote(true);
+
                                     } else {
                                         System.out.println("Nie dodano karty");
                                         client.vote(false);
@@ -245,7 +247,23 @@ public class Controller implements Initializable {
                         }
                     }
                 });
+                client.castleChangeProperty().addListener(new ChangeListener<Boolean>() {
+                    @Override
+                    public void changed(ObservableValue<? extends Boolean> observableValue, Boolean aBoolean, Boolean t1) {
+                        if (group.getSelectedToggle() != null) {
+                            if (our.isSelected()) {
+                                hideCastle(client.getGame().getOpposite().getNumber());
+                                showCastle(client.getTeamNumber());
+                                System.out.println("Nasz zamek");
+                            } else {
+                                hideCastle(client.getTeamNumber());
+                                showCastle(client.getGame().getOpposite().getNumber());
+                                System.out.println("Ich zamek");
+                            }
 
+                        }
+                    }
+                });
                 client.run();
 
 
