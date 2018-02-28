@@ -1,9 +1,12 @@
+import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.scene.control.Alert;
 
 import java.io.*;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Random;
@@ -27,13 +30,33 @@ public class Client implements Runnable {
     private Game game;
     private boolean ready = false;
 
-    public Client() {
+    public void alert(String text) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setHeaderText(null);
+        alert.setContentText(text);
+        alert.showAndWait();
+    }
+        public Client() {
         this.game = new Game();
     }
 
-    public void doIt(String server, int serverPort) throws Exception {
-        this.socket = new Socket(InetAddress.getByName(server), serverPort);
-    }
+    public boolean doIt(String server, int serverPort) {
+
+        try {
+            socket = new Socket();
+            socket.connect(new InetSocketAddress(server, serverPort), 5000);
+            return true;
+        } catch (IOException e) {
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    alert("Nie można się połączyć!");
+                }
+            });
+            return false;
+            }
+        }
+
 
     public boolean isConnected() {
         if (socket.isConnected()) return true;
@@ -183,7 +206,7 @@ public class Client implements Runnable {
                     team = game.getMine();
                 } else team = game.getOpposite();
 
-               // System.out.println("Zameeeek: " + team.getCastle().size());
+                // System.out.println("Zameeeek: " + team.getCastle().size());
                 for (int i = 1; i <= howManyCards; i++) {
                     fromsrv = inFromServer.readLine();
                     if (fromsrv.charAt(2) == '0') {
@@ -206,9 +229,9 @@ public class Client implements Runnable {
 
             while (!(fromsrv = inFromServer.readLine()).equals("x000x")) {
                 if (checkCommunicate(fromsrv) & fromsrv.charAt(0) == 'j') {
-                    System.out.println("K: "+fromsrv);
+                    System.out.println("K: " + fromsrv);
                     String nr = "" + fromsrv.charAt(1) + fromsrv.charAt(2);
-                    System.out.println("Wartosc: "+nr);
+                    System.out.println("Wartosc: " + nr);
                     game.setHowManyCards(Integer.parseInt(nr));
                     System.out.println(game.getHowManyCards());
                     //System.out.println("Koniec, jestem mega gotowy");
@@ -225,17 +248,34 @@ public class Client implements Runnable {
                     System.out.println(fromsrv);
                     if (checkCommunicate(fromsrv)) {
                         switch (fromsrv.charAt(0)) {
-                            case 's': addPlayer(fromsrv); break;
+                            case 's':
+                                addPlayer(fromsrv);
+                                break;
                             case 'R':
                                 setReady(true);
                                 System.out.println("Jestem gotowy");
                                 break;
-                            case 'j': howManyCards(fromsrv); break;
-                            case 'W': whoWin(fromsrv); break;
-                            case 'e': handleError(); break;
-                            case 'd': move(); break;
-                            case 'w': waitForIt(); break;
-                            case 'm': break;
+                            case 'j':
+                                howManyCards(fromsrv);
+                                break;
+                            case 'W':
+                                whoWin(fromsrv);
+                                break;
+                            case 'e':
+                                handleError();
+                                break;
+                            case 'd':
+                                move();
+                                break;
+                            case 'w':
+                                waitForIt();
+                                break;
+                            case 'm':
+                                break;
+                            case 'y':
+                                setIfMyMove(true);
+                                break;
+                            default: handleError();
                         }
                     }
                     ///aktualizuje graczy w teamie
@@ -249,8 +289,21 @@ public class Client implements Runnable {
         }
     }
 
-    public void chooseCard(int id) {
-        System.out.println("Id wybranej karty: "+ id);
+    public void chooseCard(Integer id) {
+        System.out.println("Id wybranej karty: " + id);
+        String message;
+        if (id < 10) {
+            message = "l" + String.valueOf(this.getTeamNumber()) + "0" + String.valueOf(id) + "l";
+        } else message = "l" + String.valueOf(this.getTeamNumber()) + String.valueOf(id) + "l";
+
+        System.out.println(message);
+        try {
+            DataOutputStream outToServer = new DataOutputStream(this.socket.getOutputStream());
+            outToServer.writeBytes(message);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public void waitForIt() {
@@ -266,6 +319,7 @@ public class Client implements Runnable {
 
     public void whoWin(String fromsrv) {
         Integer id = Character.getNumericValue(fromsrv.charAt(3));
+        if (id == 0) id = getTeamNumber();
         game.setWinnerTeamId(id);
     }
 

@@ -14,10 +14,13 @@ public class Game {
     public int getHowManyCards() {
         return howManyCards.get();
     }
-    public IntegerProperty getHowManyCardsProperty() {return howManyCards;}
+
+    public IntegerProperty getHowManyCardsProperty() {
+        return howManyCards;
+    }
 
     public void setHowManyCards(Integer howMany) {
-            this.howManyCards.setValue(howMany);
+        this.howManyCards.setValue(howMany);
     }
 
     public Team getMine() {

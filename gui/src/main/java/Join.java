@@ -5,12 +5,15 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
 
+import java.io.IOException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ResourceBundle;
 
 public class Join implements Initializable {
@@ -19,12 +22,17 @@ public class Join implements Initializable {
     private Stage stage;
 
     @FXML
-    private TextField srv, nick, port;
+    private TextField srv, port;
 
     public Join(Stage primaryStage) {
         this.stage = primaryStage;
     }
-
+    public void alert(String text) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setHeaderText(null);
+        alert.setContentText(text);
+        alert.showAndWait();
+    }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -34,17 +42,27 @@ public class Join implements Initializable {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/GUI.fxml"));
                 Parent pane = loader.load();
                 Controller controller = loader.getController();
-                client.doIt(srv.getText(), Integer.parseInt(port.getText()));
+                boolean gotit = false;
 
-                        //wyjeb wyjątek jak nie ma serwera
-                controller.setClient(client);
-                stage.getScene().setRoot(pane);
-                stage.setHeight(850);
-                stage.setWidth(1150);
-                stage.centerOnScreen();
+                    try {
+                        gotit = client.doIt(srv.getText(), Integer.parseInt(port.getText()));
+                    } catch (Exception e) {
+                        alert("Nie można się połączyć!");
+                    }
 
+
+                if(gotit) {
+                    controller.setClient(client);
+                    stage.getScene().setRoot(pane);
+                    stage.setHeight(700);
+                    stage.setWidth(1150);
+                    stage.setResizable(false);
+                    stage.centerOnScreen();
+                }
+            } catch (UnknownHostException e) {
+                alert("Nieprawidłowy adres IP lub port serwera!");
             } catch (Exception e) {
-                e.printStackTrace();
+                alert("Wystąpił błąd!");
             }
         });
     }
