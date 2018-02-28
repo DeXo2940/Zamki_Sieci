@@ -488,35 +488,38 @@ int main(int argc, char *argv[]) {
                         phase = 9;
                     } else {
                         //karta do głosowania
-                        turnCompleted = false;
                         buffer[0] = buffer[4] = 'V';
                         buffer[1] = buffer[2] = buffer[3] = '0';
                         sendToAll(buffer, true);
                         teams[teamTurn]->await(true);
                         //time limit for voting
                         timeLimit = FIRST_LIMIT;
+                        timeRunOut = false;
+                        turnCompleted = false;
                         phase = 3; ////
                         yesVote = 0;
                     }
                 } else if (phase == 3) {
+                    char buffer[6];
                     if (yesVote <= 0) {
                         //karta odrzucona - do wszystkich "schowaj"
-                        char buffer[6];
                         buffer[0] = buffer[4] = 'h';
                         buffer[1] = '0';
                         buffer[2] = cardPos / 10;
                         buffer[3] = cardPos % 10;
-                        sendToAll(buffer, true);
                         phase = 9;
                     } else {
-                        char buffer[6] = {'z', 't', 'n', 'n', 't', '\n'};
+                        //dpdak karte do zamku
+                        buffer[0] = buffer[4] = 'z';
                         buffer[1] = '0' + teams[teamTurn]->getId();
-                        buffer[2] = cardPos / 10;
-                        buffer[3] = cardPos % 10;
+                        buffer[2] = table->getCard(cardPos).getSign() / 10;
+                        buffer[3] = table->getCard(cardPos).getSign() % 10;
+                        teams[teamTurn]->addCard(table->getCard(cardPos));
+                        table->removeCard(cardPos);
                     }
+                    sendToAll(buffer, true);
                 }
             }
-            //handle wszystkie phase>=2
 
         } else {
             if (timePassed(startTime) > timeLimit) {
