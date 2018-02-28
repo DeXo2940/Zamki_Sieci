@@ -36,7 +36,8 @@ public class Client implements Runnable {
         alert.setContentText(text);
         alert.showAndWait();
     }
-        public Client() {
+
+    public Client() {
         this.game = new Game();
     }
 
@@ -54,8 +55,8 @@ public class Client implements Runnable {
                 }
             });
             return false;
-            }
         }
+    }
 
 
     public boolean isConnected() {
@@ -275,7 +276,8 @@ public class Client implements Runnable {
                             case 'y':
                                 setIfMyMove(true);
                                 break;
-                            default: handleError();
+                            default:
+                                handleError();
                         }
                     }
                     ///aktualizuje graczy w teamie

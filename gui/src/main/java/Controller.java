@@ -39,6 +39,8 @@ public class Controller implements Initializable {
     private AnchorPane root, castlePane, cardsPane;
     @FXML
     private RadioButton our, their;
+    @FXML
+    private Label teamLabel;
 
 
 
@@ -95,6 +97,7 @@ public class Controller implements Initializable {
 
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
+        //teamLabel.setText("Twój team: " + client.getGame().getMine().getColor());
 
         endGame.setOnAction((ActionEvent event) -> {
             alert("Pomyślnie dodano klienta");
@@ -211,8 +214,21 @@ public class Controller implements Initializable {
                         }
                     }
                 });
+                /*
+                client.getGame().getMine().getColorProperty().addListener(new ChangeListener<String>() {
+                    @Override
+                    public void changed(ObservableValue<? extends String> observableValue, String s, String t1) {
+                        Platform.runLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                teamLabel.setText("Twój team: " + t1);
+                            }
+                        });
 
+                    }
+                });*/
                 client.run();
+
 
                 return null;
             }

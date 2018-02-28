@@ -1,14 +1,17 @@
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+
 import java.util.ArrayList;
 
 public class Team {
     private ArrayList<Integer> players;
-    private String color;
+    private StringProperty color = new SimpleStringProperty();
     private Integer number;
     private ArrayList<Card> castle;
 
     public Team (String color, Integer number) {
         players = new ArrayList<>();
-        this.color = color;
+        this.color.setValue(color);;
         this.number = number;
         castle = new ArrayList<>();
         //System.out.println("Castle size"+castle.size());
@@ -16,7 +19,7 @@ public class Team {
 
     public Team (Integer player, String color, Integer number) {
         players = new ArrayList<>();
-        this.color = color;
+        this.color.setValue(color);
         this.number = number;
         castle = new ArrayList<>();
         players.add(player);
@@ -40,11 +43,16 @@ public class Team {
     }
 
     public String getColor() {
-        return color;
+        return color.get();
     }
 
     public void setColor(String color) {
-        this.color = color;
+        this.color.setValue(color);
+
+    }
+
+    public StringProperty getColorProperty() {
+        return color;
     }
 
     public Integer getNumber() {

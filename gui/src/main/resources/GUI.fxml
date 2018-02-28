@@ -18,7 +18,7 @@
                </children></AnchorPane>
         </items>
       </SplitPane>
-      <Label layoutX="2.0" prefHeight="26.0" prefWidth="866.0" text="Twój team:" />
+      <Label fx:id="teamLabel" layoutX="2.0" prefHeight="26.0" prefWidth="866.0" text="Twój team:" />
       <Button fx:id="endGame" layoutX="938.0" layoutY="59.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="195.0" text="Zakończ grę" />
       <Button layoutX="938.0" layoutY="28.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="195.0" text="Wyświetl zasady" />
       <Label layoutX="938.0" layoutY="98.0" text="Label" />
