@@ -19,10 +19,9 @@ void Castle::addCard(Card card) {
 }
 
 Card* Castle::getCard(int n) {
-    if(n>this->getSize()){
+    if (n>this->getSize()) {
         return NULL;
-    }
-    else{
+    } else {
         return &this->castle.at(n);
     }
 }
