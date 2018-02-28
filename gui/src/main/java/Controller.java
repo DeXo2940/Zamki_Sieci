@@ -30,7 +30,7 @@ import java.util.ResourceBundle;
 public class Controller implements Initializable {
 
     @FXML
-    private Button endGame, zasady;
+    private Button endGame;
     private Client client;
     private ArrayList<Rectangle> cards;
     @FXML
@@ -104,13 +104,6 @@ public class Controller implements Initializable {
 
         });
 
-        zasady.setOnAction((ActionEvent event) -> {
-            Alert alert = new Alert(Alert.AlertType.NONE);
-            alert.setWidth(500);
-            alert.setHeight(800);
-            alert.setContentText("W grze bierze udział 2-8 graczy. \n" + "Gracze po kolei wykonują swoje tury. Jeden gracz z drużyny wybiera kartę, pozostali głosują na to, czy dołożyć ją do swojego zamku, czy nie.");
-            alert.showAndWait();
-        });
 
         our.setToggleGroup(group);
         their.setToggleGroup(group);
@@ -122,11 +115,10 @@ public class Controller implements Initializable {
                     if (new_toggle.equals(our)) {
                         hideCastle(client.getGame().getOpposite().getNumber());
                         showCastle(client.getTeamNumber());
-                        System.out.println("Nasz zamek");
                     } else {
                         hideCastle(client.getTeamNumber());
                         showCastle(client.getGame().getOpposite().getNumber());
-                        System.out.println("Ich zamek");
+
                     }
 
 

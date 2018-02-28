@@ -129,8 +129,6 @@ public class Client implements Runnable {
                     //@TODO
                 }
             }
-////////////////////////////////////////////dziala
-            //dostań info ile teamów
             proper = false;
             boolean teams = false;
             while (!(proper & teams)) {
@@ -148,7 +146,7 @@ public class Client implements Runnable {
                 }
             }
 
-            /////////////////////////////////////////////////działa
+
 
             boolean team1Castle = false, team2Castle = false;
 
@@ -184,14 +182,13 @@ public class Client implements Runnable {
 
                 if (team.getCastle().size() == howManyCards) {
                     team1Castle = true;
-                    //System.out.println("Jestem gotowy w chuj");
+
 
                 } else {
-                    //obsluzyc wyjatek - powtorzyc komunikat???
+
                 }
             }
 
-            //dziaua////////////////////////////////////////////////////////////////////////////////////////////////
             while (!(proper & team2Castle)) {
                 char sign = 'c', signCastle = 'x';
                 int howManyCards = 0, teamNr = 0;
@@ -224,10 +221,10 @@ public class Client implements Runnable {
 
                 if (team.getCastle().size() == howManyCards) {
                     team2Castle = true;
-                    //System.out.println("Jestem gotowy w chuj");
+
 
                 } else {
-                    //obsluzyc wyjatek - powtorzyc komunikat???
+
                 }
             }
 
@@ -238,13 +235,10 @@ public class Client implements Runnable {
                     System.out.println("Wartosc: " + nr);
                     game.setHowManyCards(Integer.parseInt(nr));
                     System.out.println(game.getHowManyCards());
-                    //System.out.println("Koniec, jestem mega gotowy");
+
                 }
             }
 
-            ///jestem gotowyyyyyyy
-
-            //////////////////////koniec inicjalizacji
             Platform.runLater(new Runnable() {
                 @Override
                 public void run() {
@@ -340,7 +334,7 @@ public class Client implements Runnable {
                                 Platform.runLater(() -> {
                                     setInfo("Karta w zamku!");
                                 });
-                                System.out.println("Zamek zameczek zamkuś");
+                                //System.out.println("Zamek zameczek zamkuś");
                                 Integer id = Integer.parseInt(String.valueOf(fromsrv.charAt(1)));
                                 System.out.println(id);
                                 String c = "" + fromsrv.charAt(2) + fromsrv.charAt(3);
@@ -388,7 +382,7 @@ public class Client implements Runnable {
             message = "knnnk";
         }
         sendMessage(message);
-        System.out.println("Wysyłam: " + message);
+        //System.out.println("Wysyłam: " + message);
 
     }
 
@@ -407,7 +401,7 @@ public class Client implements Runnable {
 
     public void chooseCard(Integer id) {
         setIfMyMove(false);
-        System.out.println("Id wybranej karty: " + id);
+        //System.out.println("Id wybranej karty: " + id);
         String message;
         if (id < 10) {
             message = "l" + String.valueOf(this.getTeamNumber()) + "0" + String.valueOf(id) + "l";
