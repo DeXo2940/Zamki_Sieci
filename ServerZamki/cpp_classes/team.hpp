@@ -23,6 +23,7 @@ public:
     void incTurn();
     
     int posOfNfds(int nfds);
+    bool isEveryoneDone();
     
     void printfNfds();
     
@@ -40,6 +41,8 @@ public:
     bool isAwaited(int number);
     void unAwait(int number);
     void makeAwait(int number);
+    
+    
 };
 
 #endif /* TEAM_H */ 
