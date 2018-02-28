@@ -49,6 +49,11 @@ void sendToTeam(char buffer[], int teamNumber);
 int getReadyMrServer(int argc, char *argv[]);
 bool acceptNew(int listen_desc, int tableSize);
 void addSomeColour();
+int timePassed(time_t startTime);
+int minimumInAllCastles();
+void phaseZero();
+void firstPhase(bool isRandom);
+void secondPhase();
 
 void updateFds() {//update fds
     int n = nfds;
