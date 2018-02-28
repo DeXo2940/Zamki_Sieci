@@ -120,6 +120,7 @@ int Team::posOfNfds(int nfds) {
             return i;
         }
     }
+    return -1;
 }
 
 bool Team::isEveryoneDone() {

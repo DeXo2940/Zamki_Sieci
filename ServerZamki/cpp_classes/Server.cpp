@@ -427,6 +427,7 @@ void phaseZero() {//preparation phase
 
 void secondPhase() {//Vote phase
     char buffer[6];
+    buffer[5]='\n';
     if (yesVote <= 0) {//karta odrzucona - do wszystkich "schowaj"
         buffer[0] = buffer[4] = 'h';
         buffer[1] = '0';
@@ -454,8 +455,6 @@ int main(int argc, char *argv[]) {
     printf("Server ready!\n");
 
     while (end == false) {
-
-
         if (turnCompleted == true) {//handle game rules
             phase += 1;
             if (teamTurn > -1) {
@@ -468,8 +467,6 @@ int main(int argc, char *argv[]) {
             } else if (phase == 3) {
                 secondPhase();
             }
-
-
         } else {
             if (ready == true && timePassed(startTime) > timeLimit && phase == 2) {
                 printf("Choice timeout\n");
@@ -485,7 +482,6 @@ int main(int argc, char *argv[]) {
                 secondPhase();
             }
         }
-
         rc = poll(fds, nfds, POLL_TIMEOUT);
         if (rc < 0) { //poll failed
             perror("poll() failed");
@@ -503,7 +499,6 @@ int main(int argc, char *argv[]) {
                 teamTurn = 0;
             }
         }
-
         if (rc == 0) { //poll timeout //continue
             //printf("poll() timed out.\n");
             continue;
@@ -538,9 +533,7 @@ int main(int argc, char *argv[]) {
                             }
                         }
                     } else {
-
                         //printf("Readed: %s\n", buffer);
-                        //printf("Its %d turn\t Do belong? %d\tDo i Wait?: %d\n", teams[teamTurn]->getId(), teams[teamTurn]->isInTeam(i), teams[teamTurn]->isAwaited(teams[teamTurn]->posOfNfds(i)));
                         if (teams[teamTurn]->isInTeam(i) == true && teams[teamTurn]->isAwaited(teams[teamTurn]->posOfNfds(i)) == true) {
                             if (phase == 2 && buffer[0] == 'l' && buffer[1] - '0' == teams[teamTurn]->getId()) {
                                 cardPos = (buffer[2] - '0')*10 + (buffer[3] - '0');
@@ -553,9 +546,7 @@ int main(int argc, char *argv[]) {
                                 teams[teamTurn]->unAwait(teams[teamTurn]->posOfNfds(i));
                                 firstPhase(false);
                             } else if (phase == 3 && buffer[0] == 'k') {
-                                printf("Vote comunicat!\n");
                                 teams[teamTurn]->unAwait(teams[teamTurn]->posOfNfds(i));
-
                                 if (buffer[1] == 'y') {
                                     ++yesVote;
                                 } else {
@@ -566,16 +557,15 @@ int main(int argc, char *argv[]) {
                                 sendToTeam(buffer, teamTurn);
                                 if (teams[teamTurn]->isEveryoneDone() == true) {
                                     turnCompleted = true;
-                                    printf("Team done!\n");
+                                    //printf("Team done!\n");
                                     secondPhase();
                                 }
-
                             } else {
                                 buffer[0] = buffer[4] = 'e';
                                 buffer[1] = buffer[2] = buffer[3] = 'r';
                                 buffer[5] = '\n';
                                 rc = write(fds[i].fd, &buffer, 6 * sizeof (char));
-                                printf("Invalid input\n");
+                                //printf("Invalid input\n");
                                 if (rc < 0) { //write failed
                                     perror("write() failed");
                                     close_conn = 1;
@@ -593,18 +583,14 @@ int main(int argc, char *argv[]) {
                                 close_conn = 1;
                             }
                         }
-
-
                     }
                 }
             }
-            //close connection
-            if (close_conn == 1) {
+            if (close_conn == 1) {//close connection
                 writeError(i, false);
             }
         }
-        //koniec jeżeli widmo
-        if (nfds < sumSize() + 1) {
+        if (nfds < sumSize() + 1) {//koniec jeżeli widmo
             printf("Widmo...\n");
             perror("phantom Player\n");
             for (unsigned int i = 0; i < NUMBER_OF_TEAMS; ++i) {
@@ -613,8 +599,7 @@ int main(int argc, char *argv[]) {
             }
             end = true;
         }
-        //koniec gry bo pusty team
-        if (ready == true && emptyTeam() != -1) {
+        if (ready == true && emptyTeam() != -1) {//koniec gry bo pusty team
             char buffer[6] = {'W', 'i', 'n', '0', 'W', '\n'};
             printf("No players in a team.\n");
             sendToAll(buffer, true);
@@ -622,6 +607,5 @@ int main(int argc, char *argv[]) {
         }
     }
     printf("Server shutdown.\n");
-
     return 0;
 }
