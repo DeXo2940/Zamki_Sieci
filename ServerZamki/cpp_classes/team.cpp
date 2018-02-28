@@ -122,4 +122,14 @@ int Team::posOfNfds(int nfds) {
     }
 }
 
+bool Team::isEveryoneDone() {
+    for (unsigned int i = 0; i < awaited.size(); ++i) {
+        if (awaited.at(i) == true) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
 
