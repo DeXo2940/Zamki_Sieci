@@ -30,7 +30,7 @@ import java.util.ResourceBundle;
 public class Controller implements Initializable {
 
     @FXML
-    private Button endGame;
+    private Button endGame, zasady;
     private Client client;
     private ArrayList<Rectangle> cards;
     @FXML
@@ -98,14 +98,19 @@ public class Controller implements Initializable {
 
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
-        //teamLabel.setText("Twój team: " + client.getGame().getMine().getColor());
 
         endGame.setOnAction((ActionEvent event) -> {
             Platform.exit();
 
         });
 
-
+        zasady.setOnAction((ActionEvent event) -> {
+            Alert alert = new Alert(Alert.AlertType.NONE);
+            alert.setWidth(500);
+            alert.setHeight(800);
+            alert.setContentText("W grze bierze udział 2-8 graczy. \n" + "Gracze po kolei wykonują swoje tury. Jeden gracz z drużyny wybiera kartę, pozostali głosują na to, czy dołożyć ją do swojego zamku, czy nie.");
+            alert.showAndWait();
+        });
 
         our.setToggleGroup(group);
         their.setToggleGroup(group);
