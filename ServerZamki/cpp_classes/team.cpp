@@ -97,37 +97,29 @@ void Team::await(bool set) {
         }
     } else {
         for (unsigned int i = 0; i < awaited.size(); ++i) {
-
             awaited.at(i) = false;
         }
     }
 }
 
 void Team::unAwait(int number) {
-    for (unsigned int i = 0; i < membersNfds.size(); ++i) {
-        if (membersNfds.at(i) == number) {
-            awaited.at(i) = false;
-        }
-    }
+    awaited.at(number) = false;
 }
 
 bool Team::isAwaited(int number) {
-    for (unsigned int i = 0; i < membersNfds.size(); ++i) {
-        if (membersNfds.at(i) == number) {
-
-            return awaited.at(i);
-        }
-    }
-    return false;
+    return awaited.at(number);
 }
 
 void Team::makeAwait(int number) {
+    awaited.at(number) = true;
+}
+
+int Team::posOfNfds(int nfds) {
     for (unsigned int i = 0; i < membersNfds.size(); ++i) {
-        if (membersNfds.at(i) == number) {
-            awaited.at(i) = true;
+        if (membersNfds.at(i) == nfds) {
+            return i;
         }
     }
 }
-
 
 

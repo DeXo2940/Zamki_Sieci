@@ -22,6 +22,8 @@ public:
     int getTurn();
     void incTurn();
     
+    int posOfNfds(int nfds);
+    
     void printfNfds();
     
     void addCard(Card card);

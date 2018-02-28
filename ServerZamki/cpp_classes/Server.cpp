@@ -25,9 +25,18 @@
 struct pollfd fds[MAX_FDS];
 int nfds = 1;
 Team * teams[NUMBER_OF_TEAMS];
+Table* table;
 bool ready = false;
 vector<int> awaited;
 bool turnCompleted = false;
+int teamTurn = 0;
+int phase = -1;
+int timeLimit = 15;
+int yesVote = 0;
+time_t startTime;
+bool timeRunOut = false;
+int cardPos = 0;
+bool end = false;
 
 void updateFds();
 bool contains(char com[5], char ch);
@@ -371,40 +380,70 @@ int minimumInAllCastles() {
     return min;
 }
 
+void firstPhase(bool isRandom) {
+    printf("First phase!\n");
+    if (isRandom == true || timeRunOut == true) {
+        cardPos = rand() % table->getSize();
+        timeRunOut = false;
+    }
+    char buffer[6] = {'l', 't', 'n', 'n', 'l', '\n'};
+    buffer[1] = '0' + teams[teamTurn]->getId();
+    buffer[2] = '0' + cardPos / 10;
+    buffer[3] = '0' + cardPos % 10;
+    sendToAll(buffer, true);
+    buffer[0] = buffer[4] = 'v';
+    buffer[1] = '0';
+    buffer[2] = '0' + table->getCard(cardPos).getSign() / 10;
+    buffer[3] = '0' + table->getCard(cardPos).getSign() % 10;
+    sendToAll(buffer, true);
+    buffer[0] = buffer[4] = 'h';
+    buffer[1] = '0';
+    buffer[2] = cardPos / 10;
+    buffer[3] = cardPos % 10;
+    if (table->getCard(cardPos).getSign() < minimumInAllCastles()) {
+        //karta na śmieci
+        printf("Grave!\n");
+        table->removeCard(cardPos);
+        sendToAll(buffer, true);
+        phase = 9;
+    } else if (table->getCard(cardPos).getSign() < teams[teamTurn]->getCastle().getLastCard()->getSign()) {
+        //wait 15 i schowaj kartę
+        printf("To small!\n");
+        startTime = time(NULL);
+        timeLimit = SECOND_LIMIT;
+        while (timePassed(startTime) < timeLimit);
+        sendToAll(buffer, true);
+        phase = 9;
+    } else {
+        printf("Time to vote!\n");
+        //karta do głosowania
+        teams[teamTurn]->await(true);
+        buffer[0] = buffer[4] = 'V';
+        buffer[1] = buffer[2] = buffer[3] = '0';
+        sendToTeam(buffer, teamTurn);
+        //time limit for voting
+        timeLimit = FIRST_LIMIT;
+        timeRunOut = false;
+        turnCompleted = false;
+        phase = 3; ////
+        yesVote = 0;
+    }
+}
+
 int main(int argc, char *argv[]) {
     srand(time(NULL));
-    int teamTurn = 0;
-    int phase = -1;
-    int timeLimit = 15;
-    int yesVote = 0;
-
     int rc;
-
     int listen_desc = getReadyMrServer(argc, argv);
-    time_t startTime;
-
-    Table* table = new Table();
+    table = new Table();
     //utwórz teamy, nadaj im "kolory"
     addSomeColour();
-    printf("Server ready to play!\n");
+    printf("Server ready!\n");
 
-    bool timeRunOut = false;
-    int cardPos = 0;
-    bool end = false;
     while (end == false) {
         rc = poll(fds, nfds, POLL_TIMEOUT);
         if (rc < 0) { //poll failed
             perror("poll() failed");
             break;
-        }
-        if (rc == 0) { //poll timeout //continue
-            printf("poll() timed out.\n");
-            continue;
-            if (ready == true && timePassed(startTime) > timeLimit) {
-                timeRunOut = true;
-                teams[teamTurn]->await(false);
-                turnCompleted = true;
-            }
         }
         //accept new connection
         if (fds[0].revents & POLLIN) {
@@ -421,13 +460,12 @@ int main(int argc, char *argv[]) {
         //handle game rules
         if (turnCompleted == true) {
             phase += 1;
-
             if (teamTurn > -1) {
                 teams[teamTurn]->await(false);
             }
-
             //jeżeli koniec fazy dla drużyny
             if (phase > 7) {
+                printf("End phase!\n");
                 //jeżeli koniec gry (wygrana)
                 if (teamTurn>-1 && teamTurn > 0 && teams[teamTurn]->getCastle().getSize() >= 10) {
                     char buffer[6] = {'W', 'i', 'n', '0', 'W', '\n'};
@@ -440,8 +478,11 @@ int main(int argc, char *argv[]) {
                 phase = 1;
                 teamTurn += 1;
                 teamTurn = teamTurn % NUMBER_OF_TEAMS;
+
+                //wybieraj
+                teams[teamTurn]->makeAwait(teams[teamTurn]->getTurn());
+                printf("=_%d_=\n", teams[teamTurn]->isAwaited(teams[teamTurn]->getTurn()));
                 char buffer[6] = {'y', 't', 't', 'c', 'y', '\n'};
-                startTime = time(NULL);
                 int playerFds = teams[teamTurn]->getMember(teams[teamTurn]->getTurn());
                 rc = write(fds[playerFds].fd, &buffer, 6 * sizeof (char));
                 if (rc < 0) { //write failed
@@ -449,59 +490,18 @@ int main(int argc, char *argv[]) {
                 }
                 phase = 2;
                 // time limit for phase 2
+                startTime = time(NULL);
                 timeLimit = FIRST_LIMIT;
                 turnCompleted = false;
+                printf("Prepare to next one!\n");
             } else {
                 if (phase == 2) {
-                    if (timeRunOut == true) {
-                        cardPos = rand() % table->getSize();
-                        timeRunOut = false;
-                    }
-                    char buffer[6] = {'l', 't', 'n', 'n', 'l', '\n'};
-                    buffer[1] = '0' + teamTurn;
-                    buffer[2] = cardPos / 10;
-                    buffer[3] = cardPos % 10;
-                    sendToAll(buffer, true);
-                    buffer[0] = buffer[4] = 'v';
-                    buffer[1] = '0';
-                    buffer[2] = table->getCard(cardPos).getSign() / 10;
-                    buffer[3] = table->getCard(cardPos).getSign() % 10;
-                    sendToAll(buffer, true);
-                    if (table->getCard(cardPos).getSign() < minimumInAllCastles()) {
-                        //karta na śmieci
-                        table->removeCard(cardPos);
-                        buffer[2] = cardPos / 10;
-                        buffer[3] = cardPos % 10;
-                        buffer[1] = '0';
-                        sendToAll(buffer, true);
-                        phase = 9;
-                    } else if (table->getCard(cardPos).getSign() < teams[teamTurn]->getCastle().getLastCard()->getSign()) {
-                        //wait 15 i schowaj kartę
-                        startTime = time(NULL);
-                        timeLimit = SECOND_LIMIT;
-                        while (timePassed(startTime) < timeLimit);
-                        buffer[0] = buffer[4] = 'h';
-                        buffer[1] = '0';
-                        buffer[2] = cardPos / 10;
-                        buffer[3] = cardPos % 10;
-                        sendToAll(buffer, true);
-                        phase = 9;
-                    } else {
-                        //karta do głosowania
-                        buffer[0] = buffer[4] = 'V';
-                        buffer[1] = buffer[2] = buffer[3] = '0';
-                        sendToAll(buffer, true);
-                        teams[teamTurn]->await(true);
-                        //time limit for voting
-                        timeLimit = FIRST_LIMIT;
-                        timeRunOut = false;
-                        turnCompleted = false;
-                        phase = 3; ////
-                        yesVote = 0;
-                    }
+                    firstPhase(false);
                 } else if (phase == 3) {
+                    printf("Vote phase!\n");
                     char buffer[6];
                     if (yesVote <= 0) {
+                        printf("NO!\n");
                         //karta odrzucona - do wszystkich "schowaj"
                         buffer[0] = buffer[4] = 'h';
                         buffer[1] = '0';
@@ -509,6 +509,7 @@ int main(int argc, char *argv[]) {
                         buffer[3] = cardPos % 10;
                         phase = 9;
                     } else {
+                        printf("YES!\n");
                         //dpdak karte do zamku
                         buffer[0] = buffer[4] = 'z';
                         buffer[1] = '0' + teams[teamTurn]->getId();
@@ -522,17 +523,29 @@ int main(int argc, char *argv[]) {
             }
 
         } else {
-            if (timePassed(startTime) > timeLimit) {
+            if (ready == true && timePassed(startTime) > timeLimit && phase == 2) {
                 timeRunOut = true;
                 teams[teamTurn]->await(false);
                 turnCompleted = true;
+                firstPhase(true);
+            } else if (ready == true && timePassed(startTime) > timeLimit && phase == 3) {
+
             }
             //if (timePassed(startTime) > 0) {
             //printf("=-%d-=\n", timePassed(startTime));
             //}
             //check time if passed set passed away or something and turncompleted = true;
+            printf("Waiting for players or timeout\n");
+        }
 
-            printf("Turn not ready\n");
+        if (rc == 0) { //poll timeout //continue
+            printf("poll() timed out.\n");
+            continue;
+            if (ready == true && timePassed(startTime) > timeLimit) {
+                timeRunOut = true;
+                teams[teamTurn]->await(false);
+                turnCompleted = true;
+            }
         }
 
         for (int i = 1; i < nfds; i++) {
@@ -565,27 +578,36 @@ int main(int argc, char *argv[]) {
                         }
                     } else {
 
-                        printf("Readed: %s\n", buffer);
+                        //printf("Readed: %s\n", buffer);
+                        //printf("Its %d turn\t Do belong? %d\tDo i Wait?: %d\n", teams[teamTurn]->getId(), teams[teamTurn]->isInTeam(i), teams[teamTurn]->isAwaited(teams[teamTurn]->posOfNfds(i)));
+                        if (teams[teamTurn]->isInTeam(i) == true && teams[teamTurn]->isAwaited(teams[teamTurn]->posOfNfds(i)) == true) {
 
-                        if (teams[teamTurn]->isInTeam(i) == true && teams[teamTurn]->isAwaited(i)) {
+                            printf("Was waiting for you! :>\n");
 
                             if (phase == 2 && buffer[0] == 'l' && buffer[1] - '0' == teams[teamTurn]->getId()) {
+                                printf("Chose card comunicat!\n");
                                 cardPos = (buffer[2] - '0')*10 + (buffer[3] - '0');
-                                teams[teamTurn]->unAwait(i);
+                                teams[teamTurn]->unAwait(teams[teamTurn]->posOfNfds(i));
                                 if (cardPos > table->getSize()) {
                                     cardPos = rand() % table->getSize();
                                 }
                                 printf("Chosen card: %d - %d\n", cardPos, table->getCard(cardPos).getSign());
                                 buffer[5] = '\n';
                                 turnCompleted = true;
-                            } else
-                                if (phase == 3 && buffer[0] == 'R') {
-                                teams[teamTurn]->unAwait(i);
+                                teams[teamTurn]->unAwait(teams[teamTurn]->posOfNfds(i));
+
+                                firstPhase(false);
+                            } else if (phase == 3 && buffer[0] == 'k') {
+                                printf("Vote comunicat!\n");
+                                teams[teamTurn]->unAwait(teams[teamTurn]->posOfNfds(i));
+
                                 if (buffer[1] == 'y') {
                                     ++yesVote;
                                 } else {
                                     --yesVote;
                                 }
+                                buffer[5] = '\n';
+                                sendToTeam(buffer, teamTurn);
 
                             } else {
                                 buffer[0] = buffer[4] = 'e';
@@ -598,12 +620,10 @@ int main(int argc, char *argv[]) {
                                     close_conn = 1;
                                 }
                             }
-                            //TODO
-                            //handle if its his turn
-                            teams[teamTurn]->unAwait(i);
-                            printf("unAwaited\n");
+
 
                         } else {
+                            printf("Sorry, not waiting for you\n");
                             buffer[0] = buffer[4] = 'b';
                             buffer[1] = 'n';
                             buffer[2] = 'y';
