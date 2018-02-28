@@ -17,15 +17,17 @@
 
 #define NUMBER_OF_TEAMS 2
 #define SERVER_PORT 1234
-#define POLL_TIMEOUT 30000
+#define POLL_TIMEOUT 5000
 #define MAX_FDS 200
-
+#define FIRST_LIMIT 60
+#define SECOND_LIMIT 15
 
 struct pollfd fds[MAX_FDS];
 int nfds = 1;
 Team * teams[NUMBER_OF_TEAMS];
-vector<int> readyList;
 bool ready = false;
+vector<int> awaited;
+bool turnCompleted = false;
 
 void updateFds();
 bool contains(char com[5], char ch);
@@ -38,6 +40,7 @@ int sumSize();
 void sendToTeam(char buffer[], int teamNumber);
 int getReadyMrServer(int argc, char *argv[]);
 bool acceptNew(int listen_desc, int tableSize);
+void addSomeColour();
 //update fds
 
 void updateFds() {
@@ -185,7 +188,7 @@ bool acceptNew(int listen_desc, int tableSize) {
     }
     //READY R000R do gracza jeśli server is ready else add to ReadyList
     if (ready == false && ok == true) {
-        readyList.push_back(nfds);
+        //readyList.push_back(nfds);
     } else if (ready == true && ok == true) {
         buffer[0] = buffer[4] = 'R';
         rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
@@ -203,7 +206,6 @@ bool acceptNew(int listen_desc, int tableSize) {
         buffer[2] = '0' + teams[teamNumber]->getSize() / 10;
         buffer[3] = '0' + teams[teamNumber]->getSize() % 10;
         sendToAll(buffer, false);
-
     }
     //READY (R000R) do wszystkich oczekujących - dodanych wczesniej
     if (ready == false && nfds >= 3 && emptyTeam() == -1) {
@@ -211,13 +213,15 @@ bool acceptNew(int listen_desc, int tableSize) {
         ready = true;
         buffer[0] = buffer[4] = 'R';
         buffer[1] = buffer[2] = buffer[3] = '0';
-        for (unsigned int i = 0; i < readyList.size(); ++i) {
+        sendToAll(buffer, true);
+        turnCompleted = true;
+        /*for (unsigned int i = 0; i < readyList.size(); ++i) {
             int num = readyList.at(i);
             rc = write(fds[num].fd, &buffer, 6 * sizeof (char));
             if (rc < 0) { //write failed
                 writeError(num, true);
             }
-        }
+        }*/
     }
     return true;
 }
@@ -325,17 +329,9 @@ int getReadyMrServer(int argc, char *argv[]) {
     printf("Server run on %d port.\n", server_port);
     return listen_desc;
 }
+//Generates colours for teams
 
-int main(int argc, char *argv[]) {
-    //int team = 0;
-    //int phase = 0;
-    srand(time(NULL));
-    int rc;
-    int listen_desc = getReadyMrServer(argc, argv);
-
-    Table* table = new Table();
-
-    //utwórz teamy, nadaj im "kolory"
+void addSomeColour() {
     char colors[] = {'r', 'g', 'b', 'y', 'p', 'o', 'w'};
     if (NUMBER_OF_TEAMS < 2 || NUMBER_OF_TEAMS > 4 || NUMBER_OF_TEAMS>sizeof (colors) / sizeof (*colors)) {
         perror("Can't create teams");
@@ -355,8 +351,45 @@ int main(int argc, char *argv[]) {
         }
         printf("Team: %d\tColor: %c\n", teams[i]->getId(), teams[i]->getColor());
     }
+}
+
+//czas w s
+
+int timePassed(time_t startTime) {
+    return (int) (time(NULL) - startTime);
+}
+
+int minimumInAllCastles() {
+    int min = 999;
+    int tmp = 0;
+    for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
+        tmp = teams[i]->getCastle().getCard(teams[i]->getSize() - 1)->getSign();
+        if (tmp < min) {
+            min = tmp;
+        }
+    }
+    return min;
+}
+
+int main(int argc, char *argv[]) {
+    srand(time(NULL));
+    int teamTurn = 0;
+    int phase = -1;
+    int timeLimit = 15;
+    int yesVote = 0;
+
+    int rc;
+
+    int listen_desc = getReadyMrServer(argc, argv);
+    time_t startTime;
+
+    Table* table = new Table();
+    //utwórz teamy, nadaj im "kolory"
+    addSomeColour();
     printf("Server ready to play!\n");
 
+    bool timeRunOut = false;
+    int cardPos = 0;
     bool end = false;
     while (end == false) {
         rc = poll(fds, nfds, POLL_TIMEOUT);
@@ -367,6 +400,11 @@ int main(int argc, char *argv[]) {
         if (rc == 0) { //poll timeout //continue
             printf("poll() timed out.\n");
             continue;
+            if (ready == true && timePassed(startTime) > timeLimit) {
+                timeRunOut = true;
+                teams[teamTurn]->await(false);
+                turnCompleted = true;
+            }
         }
         //accept new connection
         if (fds[0].revents & POLLIN) {
@@ -375,6 +413,123 @@ int main(int argc, char *argv[]) {
                 //perror accep falied
                 break;
             }
+            if (ready == true && phase == -1) {
+                phase = 99;
+                teamTurn = 0;
+            }
+        }
+        //handle game rules
+        if (turnCompleted == true) {
+            phase += 1;
+
+            if (teamTurn > -1) {
+                teams[teamTurn]->await(false);
+            }
+
+            //jeżeli koniec fazy dla drużyny
+            if (phase > 7) {
+                //jeżeli koniec gry (wygrana)
+                if (teamTurn>-1 && teamTurn > 0 && teams[teamTurn]->getCastle().getSize() >= 10) {
+                    char buffer[6] = {'W', 'i', 'n', '0', 'W', '\n'};
+                    buffer[3] = '0' + teams[teamTurn]->getId();
+                    sendToAll(buffer, true);
+                    end = true;
+                    break;
+                }
+                teams[teamTurn]->incTurn();
+                phase = 1;
+                teamTurn += 1;
+                teamTurn = teamTurn % NUMBER_OF_TEAMS;
+                char buffer[6] = {'y', 't', 't', 'c', 'y', '\n'};
+                startTime = time(NULL);
+                int playerFds = teams[teamTurn]->getMember(teams[teamTurn]->getTurn());
+                rc = write(fds[playerFds].fd, &buffer, 6 * sizeof (char));
+                if (rc < 0) { //write failed
+                    writeError(playerFds, true);
+                }
+                phase = 2;
+                // time limit for phase 2
+                timeLimit = FIRST_LIMIT;
+                turnCompleted = false;
+            } else {
+                if (phase == 2) {
+                    if (timeRunOut == true) {
+                        cardPos = rand() % table->getSize();
+                        timeRunOut = false;
+                    }
+                    char buffer[6] = {'l', 't', 'n', 'n', 'l', '\n'};
+                    buffer[1] = '0' + teamTurn;
+                    buffer[2] = cardPos / 10;
+                    buffer[3] = cardPos % 10;
+                    sendToAll(buffer, true);
+                    buffer[0] = buffer[4] = 'v';
+                    buffer[1] = '0';
+                    buffer[2] = table->getCard(cardPos).getSign() / 10;
+                    buffer[3] = table->getCard(cardPos).getSign() % 10;
+                    sendToAll(buffer, true);
+                    if (table->getCard(cardPos).getSign() < minimumInAllCastles()) {
+                        //karta na śmieci
+                        table->removeCard(cardPos);
+                        buffer[2] = cardPos / 10;
+                        buffer[3] = cardPos % 10;
+                        buffer[1] = '0';
+                        sendToAll(buffer, true);
+                        phase = 9;
+                    } else if (table->getCard(cardPos).getSign() < teams[teamTurn]->getCastle().getLastCard()->getSign()) {
+                        //wait 15 i schowaj kartę
+                        startTime = time(NULL);
+                        timeLimit = SECOND_LIMIT;
+                        while (timePassed(startTime) < timeLimit);
+                        buffer[0] = buffer[4] = 'h';
+                        buffer[1] = '0';
+                        buffer[2] = cardPos / 10;
+                        buffer[3] = cardPos % 10;
+                        sendToAll(buffer, true);
+                        phase = 9;
+                    } else {
+                        //karta do głosowania
+                        turnCompleted = false;
+                        buffer[0] = buffer[4] = 'V';
+                        buffer[1] = buffer[2] = buffer[3] = '0';
+                        sendToAll(buffer, true);
+                        teams[teamTurn]->await(true);
+                        //time limit for voting
+                        timeLimit = FIRST_LIMIT;
+                        phase = 3; ////
+                        yesVote = 0;
+                    }
+                } else if (phase == 3) {
+                    if (yesVote <= 0) {
+                        //karta odrzucona - do wszystkich "schowaj"
+                        char buffer[6];
+                        buffer[0] = buffer[4] = 'h';
+                        buffer[1] = '0';
+                        buffer[2] = cardPos / 10;
+                        buffer[3] = cardPos % 10;
+                        sendToAll(buffer, true);
+                        phase = 9;
+                    } else {
+                        char buffer[6] = {'z', 't', 'n', 'n', 't', '\n'};
+                        buffer[1] = '0' + teams[teamTurn]->getId();
+                        buffer[2] = cardPos / 10;
+                        buffer[3] = cardPos % 10;
+                    }
+                }
+            }
+            //handle wszystkie phase>=2
+
+        } else {
+            if (timePassed(startTime) > timeLimit) {
+                timeRunOut = true;
+                teams[teamTurn]->await(false);
+                turnCompleted = true;
+            }
+            //if (timePassed(startTime) > 0) {
+            //printf("=-%d-=\n", timePassed(startTime));
+            //}
+            //check time if passed set passed away or something and turncompleted = true;
+
+            printf("Turn not ready\n");
         }
 
         for (int i = 1; i < nfds; i++) {
@@ -393,6 +548,7 @@ int main(int argc, char *argv[]) {
                 } else {
                     buffer[5] = '\0';
                     if (rc < 5 || contains(buffer, '\n') || !isValid(buffer)) { //invalid
+                        //invalid input
                         if (buffer[0] != '\n') {
                             buffer[0] = buffer[4] = 'e';
                             buffer[1] = buffer[2] = buffer[3] = 'r';
@@ -408,12 +564,56 @@ int main(int argc, char *argv[]) {
 
                         printf("Readed: %s\n", buffer);
 
-                        buffer[5] = '\n';
-                        rc = write(fds[i].fd, &buffer, 6 * sizeof (char));
-                        if (rc < 0) { //write failed
-                            perror("write() failed");
-                            close_conn = 1;
+                        if (teams[teamTurn]->isInTeam(i) == true && teams[teamTurn]->isAwaited(i)) {
+
+                            if (phase == 2 && buffer[0] == 'l' && buffer[1] - '0' == teams[teamTurn]->getId()) {
+                                cardPos = (buffer[2] - '0')*10 + (buffer[3] - '0');
+                                teams[teamTurn]->unAwait(i);
+                                if (cardPos > table->getSize()) {
+                                    cardPos = rand() % table->getSize();
+                                }
+                                printf("Chosen card: %d - %d\n", cardPos, table->getCard(cardPos).getSign());
+                                buffer[5] = '\n';
+                                turnCompleted = true;
+                            } else
+                                if (phase == 3 && buffer[0] == 'R') {
+                                teams[teamTurn]->unAwait(i);
+                                if (buffer[1] == 'y') {
+                                    ++yesVote;
+                                } else {
+                                    --yesVote;
+                                }
+
+                            } else {
+                                buffer[0] = buffer[4] = 'e';
+                                buffer[1] = buffer[2] = buffer[3] = 'r';
+                                buffer[5] = '\n';
+                                rc = write(fds[i].fd, &buffer, 6 * sizeof (char));
+                                printf("Invalid input\n");
+                                if (rc < 0) { //write failed
+                                    perror("write() failed");
+                                    close_conn = 1;
+                                }
+                            }
+                            //TODO
+                            //handle if its his turn
+                            teams[teamTurn]->unAwait(i);
+                            printf("unAwaited\n");
+
+                        } else {
+                            buffer[0] = buffer[4] = 'b';
+                            buffer[1] = 'n';
+                            buffer[2] = 'y';
+                            buffer[3] = 't';
+                            buffer[5] = '\n';
+                            rc = write(fds[i].fd, &buffer, 6 * sizeof (char));
+                            if (rc < 0) { //write failed
+                                perror("write() failed");
+                                close_conn = 1;
+                            }
                         }
+
+
                     }
                 }
             }
@@ -434,7 +634,6 @@ int main(int argc, char *argv[]) {
         }
         //koniec gry bo pusty team
         if (ready == true && emptyTeam() != -1) {
-
             char buffer[6] = {'W', 'i', 'n', '0', 'W', '\n'};
             printf("No players in a team.\n");
             sendToAll(buffer, true);

@@ -10,6 +10,7 @@ class Team {
     int id;
     char color;
     vector<int> membersNfds;
+    vector<bool> awaited;
     int size;
     Castle castle;
     int turn;
@@ -32,6 +33,11 @@ public:
     bool isInTeam(int nfds);
     
     Castle getCastle();
+    
+    void await(bool set);
+    bool isAwaited(int number);
+    void unAwait(int number);
+    void makeAwait(int number);
 };
 
 #endif /* TEAM_H */ 
