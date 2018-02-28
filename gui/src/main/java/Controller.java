@@ -247,20 +247,29 @@ public class Controller implements Initializable {
                         }
                     }
                 });
+
                 client.castleChangeProperty().addListener(new ChangeListener<Boolean>() {
                     @Override
                     public void changed(ObservableValue<? extends Boolean> observableValue, Boolean aBoolean, Boolean t1) {
-                        if (group.getSelectedToggle() != null) {
-                            if (our.isSelected()) {
-                                hideCastle(client.getGame().getOpposite().getNumber());
-                                showCastle(client.getTeamNumber());
-                                System.out.println("Nasz zamek");
-                            } else {
-                                hideCastle(client.getTeamNumber());
-                                showCastle(client.getGame().getOpposite().getNumber());
-                                System.out.println("Ich zamek");
-                            }
+                        if(t1) {
+                            Platform.runLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (group.getSelectedToggle() != null) {
+                                        if (our.isSelected()) {
+                                            hideCastle(client.getGame().getMine().getNumber());
+                                            showCastle(client.getTeamNumber());
+                                            System.out.println("Nasz zamek");
+                                        } else {
+                                            hideCastle(client.getGame().getOpposite().getNumber());
+                                            showCastle(client.getGame().getOpposite().getNumber());
+                                            System.out.println("Ich zamek");
+                                        }
 
+                                    }
+
+
+                            }});
                         }
                     }
                 });

@@ -264,7 +264,13 @@ public class Client implements Runnable {
                                 String winner;
                                 if(getGame().getWinnerTeamId() == getTeamNumber()) winner = this.getGame().getMine().getColor();
                                 else winner = this.getGame().getOpposite().getColor();
-                                alert("Wygrała drużyna: "+winner);
+                                Platform.runLater(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        alert("Wygrała drużyna: "+winner);
+                                    }
+                                });
+
 
                                 break;
                             case 'e':
@@ -288,30 +294,37 @@ public class Client implements Runnable {
                             case 'v':
 
                                 String card = "" + fromsrv.charAt(2) + fromsrv.charAt(3);
-                                setActualCard(Integer.valueOf(card));
+                                setActualCard(Integer.parseInt(card));
                                 System.out.println("Aktualna karta: " + getActualCard());
                                 break;
                             case 'V':
                                 setVote(true);
                                 System.out.println("Uaktywniam głosowanie ");
-                                setVote(false);
                                 break;
                             case 'c':
                                 System.out.println("Uaktualniam zamek");
                                 break;
+                            case 'h':
+                                setVote(false);
+                                setCastleChange(false);
+                                break;
                             case 'z':
+                                setVote(false);
                                 System.out.println("Zamek zameczek zamkuś");
-                                Integer id = Integer.valueOf(fromsrv.charAt(1));
+                                Integer id = Integer.parseInt(String.valueOf(fromsrv.charAt(1)));
+                                System.out.println(id);
                                 String c = "" + fromsrv.charAt(2) + fromsrv.charAt(3);
                                 if(getTeamNumber() == id) {
-                                    getGame().getMine().addToCastle(new Card(Integer.valueOf(c)));
+                                    getGame().getMine().addToCastle(new Card(Integer.parseInt(c)));
                                 }
-                                else getGame().getOpposite().addToCastle(new Card(Integer.valueOf(c)));
-
-                                setCastleChange(true);
-                            case 'g':
+                                else getGame().getOpposite().addToCastle(new Card(Integer.parseInt(c)));
                                 Integer cards = getGame().getHowManyCards() - 1;
                                 getGame().setHowManyCards(cards);
+                                setCastleChange(true);
+                                break;
+                            case 'g':
+                                Integer car = getGame().getHowManyCards() - 1;
+                                getGame().setHowManyCards(car);
                                 break;
                             default:
                                 handleError();
@@ -337,7 +350,7 @@ public class Client implements Runnable {
         } else {
             message = "knnnk";
         }
-        sendMessage(message+"\n");
+        sendMessage(message);
             System.out.println("Wysyłam: "+message);
 
     }
