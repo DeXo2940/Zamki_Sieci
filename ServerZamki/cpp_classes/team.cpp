@@ -18,14 +18,15 @@ char Team::getColor() {
 
 void Team::addToTeam(int nfds) {
     membersNfds.push_back(nfds);
+    awaited.push_back(false);
     this->size += 1;
 }
 
 void Team::removeFromTeam(int nfds) {
-    for (int i = 0; i < membersNfds.size(); ++i) {
+    for (unsigned int i = 0; i < membersNfds.size(); ++i) {
         if (membersNfds.at(i) == nfds) {
-            //printf("Team: %d\tRem: %d\n",id,membersNfds.at(i));
             membersNfds.erase(membersNfds.begin() + i);
+            awaited.erase(awaited.begin() + i);
             this->size -= 1;
             break;
         }
@@ -41,9 +42,8 @@ int Team::getSize() {
 }
 
 void Team::updateNfds(int nfds, int newNfds) {
-    for (int i = 0; i < membersNfds.size(); ++i) {
+    for (unsigned int i = 0; i < membersNfds.size(); ++i) {
         if (membersNfds.at(i) == nfds) {
-
             //membersNfds[i]=newNfds;
             membersNfds.at(i) = newNfds;
             //printf("Team: %d\tUpdate: %d->%d\tActual: %d\n",id,nfds,newNfds,membersNfds.at(i));
@@ -53,7 +53,7 @@ void Team::updateNfds(int nfds, int newNfds) {
 }
 
 bool Team::isInTeam(int nfds) {
-    for (int i = 0; i < membersNfds.size(); ++i) {
+    for (unsigned int i = 0; i < membersNfds.size(); ++i) {
         if (membersNfds.at(i) == nfds) {
             return true;
         }
@@ -66,7 +66,7 @@ void Team::addCard(Card card) {
 }
 
 void Team::printfNfds() {
-    for (int i = 0; i<this->size; ++i) {
+    for (unsigned int i = 0; i<this->membersNfds.size(); ++i) {
         printf("%d: ", this->membersNfds.at(i));
     }
     printf("\n");
@@ -75,4 +75,61 @@ void Team::printfNfds() {
 int Team::getMember(int possition) {
     return membersNfds.at(possition);
 }
+
+int Team::getTurn() {
+    if (turn >= size) {
+        turn = 0;
+    }
+    return turn;
+}
+
+void Team::incTurn() {
+    turn += 1;
+    if (turn >= size) {
+        turn = 0;
+    }
+}
+
+void Team::await(bool set) {
+    if (set == true) {
+        for (unsigned int i = 0; i < awaited.size(); ++i) {
+            awaited.at(i) = true;
+        }
+    } else {
+        for (unsigned int i = 0; i < awaited.size(); ++i) {
+            awaited.at(i) = false;
+        }
+    }
+}
+
+void Team::unAwait(int number) {
+    awaited.at(number) = false;
+}
+
+bool Team::isAwaited(int number) {
+    return awaited.at(number);
+}
+
+void Team::makeAwait(int number) {
+    awaited.at(number) = true;
+}
+
+int Team::posOfNfds(int nfds) {
+    for (unsigned int i = 0; i < membersNfds.size(); ++i) {
+        if (membersNfds.at(i) == nfds) {
+            return i;
+        }
+    }
+}
+
+bool Team::isEveryoneDone() {
+    for (unsigned int i = 0; i < awaited.size(); ++i) {
+        if (awaited.at(i) == true) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
 

@@ -13,6 +13,7 @@ public:
     Castle();
     int getSize();
     Card* getCard(int n);
+    Card* getLastCard();
 private:
     void incSize();
 };
