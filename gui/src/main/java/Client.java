@@ -260,6 +260,11 @@ public class Client implements Runnable {
                                 break;
                             case 'W':
                                 whoWin(fromsrv);
+                                String winner;
+                                if(getGame().getWinnerTeamId() == getTeamNumber()) winner = this.getGame().getMine().getColor();
+                                else winner = this.getGame().getOpposite().getColor();
+                                alert("Wygrała drużyna: "+winner);
+
                                 break;
                             case 'e':
                                 handleError();
@@ -280,6 +285,7 @@ public class Client implements Runnable {
                                 System.out.println("Wybrano kartę");
                                 break;
                             case 'v':
+
                                 String card = "" + fromsrv.charAt(2) + fromsrv.charAt(3);
                                 setActualCard(Integer.valueOf(card));
                                 System.out.println("Aktualna karta: " + getActualCard());
@@ -287,6 +293,15 @@ public class Client implements Runnable {
                             case 'V':
                                 setVote(true);
                                 System.out.println("Uaktywniam głosowanie ");
+                                break;
+                            case 'c':
+                                System.out.println("Uaktualniam zamek");
+                                break;
+                            case 'z':
+                                System.out.println("Zamek zameczek zamkuś");
+                            case 'g':
+                                Integer cards = getGame().getHowManyCards() - 1;
+                                getGame().setHowManyCards(cards);
                                 break;
                             default:
                                 handleError();
@@ -312,7 +327,7 @@ public class Client implements Runnable {
         } else {
             message = "knnnk";
         }
-        sendMessage(message);
+        sendMessage(message+"\n");
             System.out.println("Wysyłam: "+message);
 
     }
