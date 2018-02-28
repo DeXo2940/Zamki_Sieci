@@ -2,6 +2,8 @@ import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.scene.control.Alert;
 
 import java.io.*;
@@ -17,6 +19,7 @@ public class Client implements Runnable {
     private Integer actualCard;
     private boolean ifMyMove = false;
     private BooleanProperty castleChange = new SimpleBooleanProperty();
+    private StringProperty info = new SimpleStringProperty();
 
     public Game getGame() {
         return game;
@@ -287,6 +290,13 @@ public class Client implements Runnable {
                             case 'y':
                                 setIfMyMove(true);
                                 System.out.println("Mój ruch");
+                                Platform.runLater(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        setInfo("Twój ruch");
+                                    }
+                                });
+
                                 break;
                             case 'l':
                                 System.out.println("Wybrano kartę");
@@ -325,6 +335,9 @@ public class Client implements Runnable {
                             case 'g':
                                 Integer car = getGame().getHowManyCards() - 1;
                                 getGame().setHowManyCards(car);
+                                Platform.runLater(() -> {
+                                    alert("Karta jest za mała do zamków! Tracisz kolejkę");
+                                });
                                 break;
                             default:
                                 handleError();
@@ -465,10 +478,6 @@ public class Client implements Runnable {
         return socket;
     }
 
-    public boolean isCastleChange() {
-        return castleChange.get();
-    }
-
     public BooleanProperty castleChangeProperty() {
         return castleChange;
     }
@@ -479,5 +488,17 @@ public class Client implements Runnable {
 
     public void setCastleChange(boolean castleChange) {
         this.castleChange.set(castleChange);
+    }
+
+    public String getInfo() {
+        return info.get();
+    }
+
+    public StringProperty infoProperty() {
+        return info;
+    }
+
+    public void setInfo(String info) {
+        this.info.set(info);
     }
 }

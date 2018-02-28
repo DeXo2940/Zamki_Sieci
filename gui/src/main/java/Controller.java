@@ -273,6 +273,13 @@ public class Controller implements Initializable {
                         }
                     }
                 });
+                Platform.runLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        teamLabel.textProperty().bind(client.infoProperty());
+                    }
+                });
+
                 client.run();
 
 
