@@ -17,23 +17,39 @@
 
 #define NUMBER_OF_TEAMS 2
 #define SERVER_PORT 1234
-#define POLL_TIMEOUT 30000
+#define POLL_TIMEOUT 5000
 #define MAX_FDS 200
-
+#define FIRST_LIMIT 60
+#define SECOND_LIMIT 15
 
 struct pollfd fds[MAX_FDS];
 int nfds = 1;
 Team * teams[NUMBER_OF_TEAMS];
+Table* table;
+bool ready = false;
+vector<int> awaited;
+bool turnCompleted = false;
+int teamTurn = 0;
+int phase = -1;
+int timeLimit = 15;
+int yesVote = 0;
+time_t startTime;
+bool timeRunOut = false;
+int cardPos = 0;
+bool end = false;
 
 void updateFds();
 bool contains(char com[5], char ch);
 bool isValid(char com[5]);
 int emptyTeam();
 void printfTeamSizes();
-void writeError(int number);
+void writeError(int number, bool isError);
 void sendToAll(char buffer[], bool toLast);
 int sumSize();
 void sendToTeam(char buffer[], int teamNumber);
+int getReadyMrServer(int argc, char *argv[]);
+bool acceptNew(int listen_desc, int tableSize);
+void addSomeColour();
 //update fds
 
 void updateFds() {
@@ -43,7 +59,7 @@ void updateFds() {
         if (fds[i].fd < 0)
             continue;
         fds[nfds] = fds[i];
-        for (int j = 0; j < NUMBER_OF_TEAMS; ++j) {
+        for (unsigned int j = 0; j < NUMBER_OF_TEAMS; ++j) {
             if (teams[j]->isInTeam(i)) {
                 teams[j]->updateNfds(i, nfds);
                 break;
@@ -73,7 +89,7 @@ bool isValid(char com[5]) {
 //return empty team number
 
 int emptyTeam() {
-    for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
+    for (unsigned int i = 0; i < NUMBER_OF_TEAMS; ++i) {
         if (teams[i]->getSize() == 0) {
             //printf("Empty team: %d\n", teams[i]->getId());
             return i;
@@ -84,18 +100,150 @@ int emptyTeam() {
 //print size of each team
 
 void printfTeamsSizes() {
-    for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
+    for (unsigned int i = 0; i < NUMBER_OF_TEAMS; ++i) {
         printf("Team %d size: %d\n", teams[i]->getId(), teams[i]->getSize());
     }
 }
+//handle accepting new connection
+
+bool acceptNew(int listen_desc, int tableSize) {
+    int new_desc = accept(listen_desc, NULL, NULL);
+    bool ok = true;
+    if (new_desc < 0) {
+        perror("accept() failed");
+        return false;
+    }
+    printf("New connection accepted...\n");
+    fds[nfds].fd = new_desc;
+    fds[nfds].events = POLLIN;
+    fds[nfds].revents = 0;
+    //dołącz do drużyny
+    unsigned int teamNumber;
+    for (teamNumber = 1; teamNumber < NUMBER_OF_TEAMS; ++teamNumber) {
+        if (teams[teamNumber - 1]->getSize() <= teams[teamNumber]->getSize()) {
+            break;
+        }
+    }
+    teamNumber -= 1;
+    teams[teamNumber]->addToTeam(nfds);
+    //kolor i numer drużyny
+    char buffer[6] = {'t', 'n', 'c', '0', 't', '\n'};
+    buffer[1] = '0' + teams[teamNumber]->getId();
+    buffer[2] = teams[teamNumber]->getColor();
+    int rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+    //kolor drugiego teamu
+    if (rc < 0) { //write failed
+        ok = false;
+    } else {
+        buffer[0] = buffer[4] = 'n';
+        for (unsigned int i = 0; i < NUMBER_OF_TEAMS && ok == true; ++i) {
+            if (teamNumber == i) continue;
+            buffer[1] = '0' + teams[i]->getId();
+            buffer[2] = buffer[3] = teams[i]->getColor();
+            rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+            if (rc < 0) { //write failed
+                ok = false;
+            }
+        }
+    }
+    //ilość graczy w teamach i stan zamków
+    for (unsigned int i = 0; i < NUMBER_OF_TEAMS && ok == true; ++i) {
+        buffer[0] = buffer[4] = 's';
+        buffer[1] = '0' + teams[i]->getId();
+        buffer[2] = '0' + teams[i]->getSize() / 10;
+        buffer[3] = '0' + teams[i]->getSize() % 10;
+        rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+        //wielkość zamków
+        if (rc < 0) { //write failed
+            ok = false;
+        } else {
+            buffer[0] = buffer[4] = 'c';
+            buffer[1] = '0' + teams[i]->getId();
+            buffer[2] = '0' + teams[i]->getCastle().getSize() / 10;
+            buffer[3] = '0' + teams[i]->getCastle().getSize() % 10;
+            rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+            if (rc < 0) { //write failed
+                ok = false;
+            }
+        }
+        //stan zamków
+        for (int j = 0; j < teams[i]->getCastle().getSize() && ok == true; ++j) {
+            buffer[0] = buffer[4] = 'z';
+            buffer[2] = '0' + teams[i]->getCastle().getCard(j)->getSign() / 10;
+            buffer[3] = '0' + teams[i]->getCastle().getCard(j)->getSign() % 10;
+            rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+            if (rc < 0) { //write failed
+                ok = false;
+            }
+        }
+    }
+    //stan stołu - ilość kart
+    buffer[0] = buffer[4] = 'j';
+    buffer[1] = '0' + tableSize / 10;
+    buffer[2] = '0' + tableSize % 10;
+    buffer[3] = '0';
+    rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+    if (rc < 0) { //write failed
+        ok = false;
+    }
+    //koniec komunikatów, uznaj się za poprawnie dodanego 
+    if (ok == true) {
+        buffer[0] = buffer[4] = 'x';
+        buffer[1] = buffer[2] = buffer[3] = '0';
+        rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+        if (rc < 0) { //write failed
+            ok = false;
+        }
+    }
+    //READY R000R do gracza jeśli server is ready else add to ReadyList
+    if (ready == false && ok == true) {
+        //readyList.push_back(nfds);
+    } else if (ready == true && ok == true) {
+        buffer[0] = buffer[4] = 'R';
+        rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
+        if (rc < 0) {
+            ok = false;
+        }
+    }
+    if (ok == false) { //write failed
+        writeError(nfds, true);
+    } else {
+        nfds++;
+        //do wszystkich że dołączył nowy gracz
+        buffer[0] = buffer[4] = 's';
+        buffer[1] = '0' + teams[teamNumber]->getId();
+        buffer[2] = '0' + teams[teamNumber]->getSize() / 10;
+        buffer[3] = '0' + teams[teamNumber]->getSize() % 10;
+        sendToAll(buffer, false);
+    }
+    //READY (R000R) do wszystkich oczekujących - dodanych wczesniej
+    if (ready == false && nfds >= 3 && emptyTeam() == -1) {
+        printf("Server ready for game!\n");
+        ready = true;
+        buffer[0] = buffer[4] = 'R';
+        buffer[1] = buffer[2] = buffer[3] = '0';
+        sendToAll(buffer, true);
+        turnCompleted = true;
+        /*for (unsigned int i = 0; i < readyList.size(); ++i) {
+            int num = readyList.at(i);
+            rc = write(fds[num].fd, &buffer, 6 * sizeof (char));
+            if (rc < 0) { //write failed
+                writeError(num, true);
+            }
+        }*/
+    }
+    return true;
+}
 //handle error in write()
 
-void writeError(int number) {
-    perror("write() failed");
+void writeError(int number, bool isErrror) {
+    if (isErrror == true) {
+        perror("write() failed");
+    }
     printf("closing connection...\n");
     close(fds[number].fd);
     fds[number].fd *= -1;
-    for (int teamNumber = 0; teamNumber < NUMBER_OF_TEAMS; ++teamNumber) {
+    for (unsigned int teamNumber = 0; teamNumber < NUMBER_OF_TEAMS; ++teamNumber) {
         if (teams[teamNumber]->isInTeam(number)) {
             teams[teamNumber]->removeFromTeam(number);
             char buffer[6] = {'s', 't', 'n', 'n', 's', '\n'};
@@ -117,7 +265,7 @@ void sendToAll(char buffer[], bool toLast) {
         rc = write(fds[j].fd, buffer, 6 * sizeof (char));
         if (rc < 0) { //write failed
             updateFds();
-            writeError(j);
+            writeError(j, true);
         }
     }
 }
@@ -129,7 +277,7 @@ void sendToTeam(char buffer[], int teamNumber) {
         rc = write(fds[teams[teamNumber]->getMember(j)].fd, buffer, 6 * sizeof (char));
         if (rc < 0) { //write failed
             updateFds();
-            writeError(j);
+            writeError(j, true);
         }
     }
 }
@@ -137,18 +285,14 @@ void sendToTeam(char buffer[], int teamNumber) {
 
 int sumSize() {
     int sum = 0;
-    for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
+    for (unsigned int i = 0; i < NUMBER_OF_TEAMS; ++i) {
         sum += teams[i]->getSize();
     }
     return sum;
 }
+//prepare Server to run
 
-int main(int argc, char *argv[]) {
-    //int team = 0;
-    //int phase = 0;
-    vector<int> readyList;
-    bool ready = false;
-
+int getReadyMrServer(int argc, char *argv[]) {
     short server_port = SERVER_PORT;
     if (argc > 1) {
         char *p;
@@ -160,6 +304,7 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
     }
+
     int listen_desc = socket(AF_INET, SOCK_STREAM, 0);
     if (listen_desc < 0) { //socket failed
         perror("socket() failed");
@@ -172,29 +317,6 @@ int main(int argc, char *argv[]) {
         close(listen_desc);
         exit(3);
     }
-
-    Table* table = new Table();
-    //utwórz teamy, nadaj im "kolory"
-    char colors[] = {'r', 'g', 'b', 'y', 'p', 'o', 'w'};
-    if (NUMBER_OF_TEAMS < 2 || NUMBER_OF_TEAMS > 4 || NUMBER_OF_TEAMS>sizeof (colors) / sizeof (*colors)) {
-        perror("Can't create teams");
-        exit(13);
-    }
-    for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
-        char color;
-        do {
-            color = colors[rand() % sizeof (colors) / sizeof (*colors)];
-        } while (color == 0);
-        teams[i] = new Team(i + 1, color);
-        for (int j = 0; j<sizeof (colors) / sizeof (*colors); ++j) {
-            if (colors[j] == color) {
-                colors[j] = 0;
-                break;
-            }
-        }
-        printf("Team: %d\tColor: %c\n", teams[i]->getId(), teams[i]->getColor());
-    }
-
     struct sockaddr_in addr = {};
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -213,169 +335,221 @@ int main(int argc, char *argv[]) {
     }
     fds[0].fd = listen_desc;
     fds[0].events = POLLIN;
+    printf("Server run on %d port.\n", server_port);
+    return listen_desc;
+}
+//Generates colours for teams
 
+void addSomeColour() {
+    char colors[] = {'r', 'g', 'b', 'y', 'p', 'o', 'w'};
+    if (NUMBER_OF_TEAMS < 2 || NUMBER_OF_TEAMS > 4 || NUMBER_OF_TEAMS>sizeof (colors) / sizeof (*colors)) {
+        perror("Can't create teams");
+        exit(13);
+    }
+    for (unsigned int i = 0; i < NUMBER_OF_TEAMS; ++i) {
+        char color;
+        do {
+            color = colors[rand() % sizeof (colors) / sizeof (*colors)];
+        } while (color == 0);
+        teams[i] = new Team(i + 1, color);
+        for (unsigned int j = 0; j<sizeof (colors) / sizeof (*colors); ++j) {
+            if (colors[j] == color) {
+                colors[j] = 0;
+                break;
+            }
+        }
+        printf("Team: %d\tColor: %c\n", teams[i]->getId(), teams[i]->getColor());
+    }
+}
+
+//czas w s
+
+int timePassed(time_t startTime) {
+    return (int) (time(NULL) - startTime);
+}
+
+int minimumInAllCastles() {
+    int min = 999;
+    int tmp = 0;
+    for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
+        tmp = teams[i]->getCastle().getCard(teams[i]->getSize() - 1)->getSign();
+        if (tmp < min) {
+            min = tmp;
+        }
+    }
+    return min;
+}
+
+void firstPhase(bool isRandom) {
+    printf("First phase!\n");
+    if (isRandom == true || timeRunOut == true) {
+        cardPos = rand() % table->getSize();
+        timeRunOut = false;
+    }
+    char buffer[6] = {'l', 't', 'n', 'n', 'l', '\n'};
+    buffer[1] = '0' + teams[teamTurn]->getId();
+    buffer[2] = '0' + cardPos / 10;
+    buffer[3] = '0' + cardPos % 10;
+    sendToAll(buffer, true);
+    buffer[0] = buffer[4] = 'v';
+    buffer[1] = '0';
+    buffer[2] = '0' + table->getCard(cardPos).getSign() / 10;
+    buffer[3] = '0' + table->getCard(cardPos).getSign() % 10;
+    sendToAll(buffer, true);
+    buffer[0] = buffer[4] = 'h';
+    buffer[1] = '0';
+    buffer[2] = cardPos / 10;
+    buffer[3] = cardPos % 10;
+    if (table->getCard(cardPos).getSign() < minimumInAllCastles()) {
+        //karta na śmieci
+        printf("Grave!\n");
+        table->removeCard(cardPos);
+        sendToAll(buffer, true);
+        phase = 9;
+    } else if (table->getCard(cardPos).getSign() < teams[teamTurn]->getCastle().getLastCard()->getSign()) {
+        //wait 15 i schowaj kartę
+        printf("To small!\n");
+        startTime = time(NULL);
+        timeLimit = SECOND_LIMIT;
+        while (timePassed(startTime) < timeLimit);
+        sendToAll(buffer, true);
+        phase = 9;
+    } else {
+        printf("Time to vote!\n");
+        //karta do głosowania
+        teams[teamTurn]->await(true);
+        buffer[0] = buffer[4] = 'V';
+        buffer[1] = buffer[2] = buffer[3] = '0';
+        sendToTeam(buffer, teamTurn);
+        //time limit for voting
+        timeLimit = FIRST_LIMIT;
+        timeRunOut = false;
+        turnCompleted = false;
+        phase = 3; ////
+        yesVote = 0;
+    }
+}
+
+int main(int argc, char *argv[]) {
+    srand(time(NULL));
+    int rc;
+    int listen_desc = getReadyMrServer(argc, argv);
+    table = new Table();
+    //utwórz teamy, nadaj im "kolory"
+    addSomeColour();
     printf("Server ready!\n");
 
-    /*
-    teams[0]->addCard(table->getCard(11));
-    teams[0]->addCard(table->getCard(12));
-    teams[0]->addCard(table->getCard(13));
-    teams[1]->addCard(table->getCard(2));
-    table->removeCard(11);
-    table->removeCard(12);
-    table->removeCard(13);
-    table->removeCard(2);
-     */
-    /*
-    table->printCards('p');
-    table->removeCard(2);
-    table->printCards('p');
-    table->removeCard(2);
-    table->printCards('p');*/
-
-    bool end = false;
     while (end == false) {
         rc = poll(fds, nfds, POLL_TIMEOUT);
         if (rc < 0) { //poll failed
             perror("poll() failed");
             break;
         }
+        //accept new connection
+        if (fds[0].revents & POLLIN) {
+            end = !acceptNew(listen_desc, table->getSize());
+            if (end == true) {
+                //perror accep falied
+                break;
+            }
+            if (ready == true && phase == -1) {
+                phase = 99;
+                teamTurn = 0;
+            }
+        }
+        //handle game rules
+        if (turnCompleted == true) {
+            phase += 1;
+            if (teamTurn > -1) {
+                teams[teamTurn]->await(false);
+            }
+            //jeżeli koniec fazy dla drużyny
+            if (phase > 7) {
+                printf("End phase!\n");
+                //jeżeli koniec gry (wygrana)
+                if (teamTurn>-1 && teamTurn > 0 && teams[teamTurn]->getCastle().getSize() >= 10) {
+                    char buffer[6] = {'W', 'i', 'n', '0', 'W', '\n'};
+                    buffer[3] = '0' + teams[teamTurn]->getId();
+                    sendToAll(buffer, true);
+                    end = true;
+                    break;
+                }
+                teams[teamTurn]->incTurn();
+                phase = 1;
+                teamTurn += 1;
+                teamTurn = teamTurn % NUMBER_OF_TEAMS;
+
+                //wybieraj
+                teams[teamTurn]->makeAwait(teams[teamTurn]->getTurn());
+                printf("=_%d_=\n", teams[teamTurn]->isAwaited(teams[teamTurn]->getTurn()));
+                char buffer[6] = {'y', 't', 't', 'c', 'y', '\n'};
+                int playerFds = teams[teamTurn]->getMember(teams[teamTurn]->getTurn());
+                rc = write(fds[playerFds].fd, &buffer, 6 * sizeof (char));
+                if (rc < 0) { //write failed
+                    writeError(playerFds, true);
+                }
+                phase = 2;
+                // time limit for phase 2
+                startTime = time(NULL);
+                timeLimit = FIRST_LIMIT;
+                turnCompleted = false;
+                printf("Prepare to next one!\n");
+            } else {
+                if (phase == 2) {
+                    firstPhase(false);
+                } else if (phase == 3) {
+                    printf("Vote phase!\n");
+                    char buffer[6];
+                    if (yesVote <= 0) {
+                        printf("NO!\n");
+                        //karta odrzucona - do wszystkich "schowaj"
+                        buffer[0] = buffer[4] = 'h';
+                        buffer[1] = '0';
+                        buffer[2] = cardPos / 10;
+                        buffer[3] = cardPos % 10;
+                        phase = 9;
+                    } else {
+                        printf("YES!\n");
+                        //dpdak karte do zamku
+                        buffer[0] = buffer[4] = 'z';
+                        buffer[1] = '0' + teams[teamTurn]->getId();
+                        buffer[2] = table->getCard(cardPos).getSign() / 10;
+                        buffer[3] = table->getCard(cardPos).getSign() % 10;
+                        teams[teamTurn]->addCard(table->getCard(cardPos));
+                        table->removeCard(cardPos);
+                    }
+                    sendToAll(buffer, true);
+                }
+            }
+
+        } else {
+            if (ready == true && timePassed(startTime) > timeLimit && phase == 2) {
+                timeRunOut = true;
+                teams[teamTurn]->await(false);
+                turnCompleted = true;
+                firstPhase(true);
+            } else if (ready == true && timePassed(startTime) > timeLimit && phase == 3) {
+
+            }
+            //if (timePassed(startTime) > 0) {
+            //printf("=-%d-=\n", timePassed(startTime));
+            //}
+            //check time if passed set passed away or something and turncompleted = true;
+            printf("Waiting for players or timeout\n");
+        }
+
         if (rc == 0) { //poll timeout //continue
             printf("poll() timed out.\n");
             continue;
-        }
-
-        if (fds[0].revents & POLLIN) {
-            int new_desc = accept(listen_desc, NULL, NULL);
-            bool ok = true;
-            if (new_desc < 0) {
-                perror("accept() failed");
-                break;
+            if (ready == true && timePassed(startTime) > timeLimit) {
+                timeRunOut = true;
+                teams[teamTurn]->await(false);
+                turnCompleted = true;
             }
-            printf("New connection accepted...\n");
-            fds[nfds].fd = new_desc;
-            fds[nfds].events = POLLIN;
-            fds[nfds].revents = 0;
-            //dołącz do drużyny
-            int teamNumber;
-            for (teamNumber = 1; teamNumber < NUMBER_OF_TEAMS; ++teamNumber) {
-                if (teams[teamNumber - 1]->getSize() <= teams[teamNumber]->getSize()) {
-                    break;
-                }
-            }
-            teamNumber -= 1;
-            teams[teamNumber]->addToTeam(nfds);
-            //kolor i numer drużyny
-            char buffer[6] = {'t', 'n', 'c', '0', 't', '\n'};
-            buffer[1] = '0' + teams[teamNumber]->getId();
-            buffer[2] = teams[teamNumber]->getColor();
-            rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
-            //kolor drugiego teamu
-            if (rc < 0) { //write failed
-                ok = false;
-            } else {
-                buffer[0] = buffer[4] = 'n';
-                for (int i = 0; i < NUMBER_OF_TEAMS && ok == true; ++i) {
-                    if (teamNumber == i) continue;
-                    buffer[1] = '0' + teams[i]->getId();
-                    buffer[2] = buffer[3] = teams[i]->getColor();
-                    rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
-                    if (rc < 0) { //write failed
-                        ok = false;
-                    }
-                }
-            }
-            //ilość graczy w teamach i stan zamków
-            for (int i = 0; i < NUMBER_OF_TEAMS && ok == true; ++i) {
-                buffer[0] = buffer[4] = 's';
-                buffer[1] = '0' + teams[i]->getId();
-                buffer[2] = '0' + teams[i]->getSize() / 10;
-                buffer[3] = '0' + teams[i]->getSize() % 10;
-                rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
-                //wielkość zamków
-                if (rc < 0) { //write failed
-                    ok = false;
-                } else {
-                    buffer[0] = buffer[4] = 'c';
-                    buffer[1] = '0' + teams[i]->getId();
-                    buffer[2] = '0' + teams[i]->getCastle().getSize() / 10;
-                    buffer[3] = '0' + teams[i]->getCastle().getSize() % 10;
-                    rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
-                    if (rc < 0) { //write failed
-                        ok = false;
-                    }
-                }
-                //stan zamków
-                for (int j = 0; j < teams[i]->getCastle().getSize() && ok == true; ++j) {
-                    buffer[0] = buffer[4] = 'z';
-                    buffer[2] = '0' + teams[i]->getCastle().getCard(j)->getSign() / 10;
-                    buffer[3] = '0' + teams[i]->getCastle().getCard(j)->getSign() % 10;
-                    rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
-                    if (rc < 0) { //write failed
-                        ok = false;
-                    }
-                }
-            }
-            //stan stołu - ilość kart
-            buffer[0] = buffer[4] = 'j';
-            buffer[1] = '0' + table->getSize() / 10;
-            buffer[2] = '0' + table->getSize() % 10;
-            buffer[3] = '0';
-            rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
-            if (rc < 0) { //write failed
-                ok = false;
-            }
-            //koniec komunikatów, uznaj się za poprawnie dodanego 
-            if (ok == true) {
-                buffer[0] = buffer[4] = 'x';
-                buffer[1] = buffer[2] = buffer[3] = '0';
-                rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
-                if (rc < 0) { //write failed
-                    ok = false;
-                }
-            }
-            //READY R000R do gracza jeśli server is ready else add to ReadyList
-            if (ready == false && ok == true) {
-                readyList.push_back(nfds);
-            } else if (ready == true && ok == true) {
-                buffer[0] = buffer[4] = 'R';
-                rc = write(fds[nfds].fd, &buffer, 6 * sizeof (char));
-                if (rc < 0) {
-                    ok = false;
-                }
-            }
-            if (ok == false) { //write failed
-                writeError(nfds);
-            } else {
-                nfds++;
-                //do wszystkich że dołączył nowy gracz
-                buffer[0] = buffer[4] = 's';
-                buffer[1] = '0' + teams[teamNumber]->getId();
-                buffer[2] = '0' + teams[teamNumber]->getSize() / 10;
-                buffer[3] = '0' + teams[teamNumber]->getSize() % 10;
-                sendToAll(buffer, false);
-
-            }
-            //READY (R000R) do wszystkich oczekujących - dodanych wczesniej
-            if (ready == false && nfds >= 3 && emptyTeam() == -1) {
-                printf("Server ready for game!\n");
-                ready = true;
-                buffer[0] = buffer[4] = 'R';
-                buffer[1] = buffer[2] = buffer[3] = '0';
-                for (int i = 0; i < readyList.size(); ++i) {
-                    int num = readyList.at(i);
-                    rc = write(fds[num].fd, &buffer, 6 * sizeof (char));
-                    if (rc < 0) { //write failed
-                        writeError(num);
-                    }
-                }
-            }
-            //printf("=-NFDS: %d\tBelong to team: %d-=\n",nfds-1,teams[teamNumber]->isInTeam(nfds-1));
         }
 
         for (int i = 1; i < nfds; i++) {
             int close_conn = 0;
-
             if (fds[i].revents & POLLERR) { //socket error close connection
                 printf("socket error, closing connection...\n");
                 close_conn = 1;
@@ -390,6 +564,7 @@ int main(int argc, char *argv[]) {
                 } else {
                     buffer[5] = '\0';
                     if (rc < 5 || contains(buffer, '\n') || !isValid(buffer)) { //invalid
+                        //invalid input
                         if (buffer[0] != '\n') {
                             buffer[0] = buffer[4] = 'e';
                             buffer[1] = buffer[2] = buffer[3] = 'r';
@@ -403,60 +578,86 @@ int main(int argc, char *argv[]) {
                         }
                     } else {
 
-                        printf("Readed: %s\n", buffer);
+                        //printf("Readed: %s\n", buffer);
+                        //printf("Its %d turn\t Do belong? %d\tDo i Wait?: %d\n", teams[teamTurn]->getId(), teams[teamTurn]->isInTeam(i), teams[teamTurn]->isAwaited(teams[teamTurn]->posOfNfds(i)));
+                        if (teams[teamTurn]->isInTeam(i) == true && teams[teamTurn]->isAwaited(teams[teamTurn]->posOfNfds(i)) == true) {
 
-                        buffer[5] = '\n';
-                        rc = write(fds[i].fd, &buffer, 6 * sizeof (char));
-                        if (rc < 0) { //write failed
-                            perror("write() failed");
-                            close_conn = 1;
+                            printf("Was waiting for you! :>\n");
+
+                            if (phase == 2 && buffer[0] == 'l' && buffer[1] - '0' == teams[teamTurn]->getId()) {
+                                printf("Chose card comunicat!\n");
+                                cardPos = (buffer[2] - '0')*10 + (buffer[3] - '0');
+                                teams[teamTurn]->unAwait(teams[teamTurn]->posOfNfds(i));
+                                if (cardPos > table->getSize()) {
+                                    cardPos = rand() % table->getSize();
+                                }
+                                printf("Chosen card: %d - %d\n", cardPos, table->getCard(cardPos).getSign());
+                                buffer[5] = '\n';
+                                turnCompleted = true;
+                                teams[teamTurn]->unAwait(teams[teamTurn]->posOfNfds(i));
+
+                                firstPhase(false);
+                            } else if (phase == 3 && buffer[0] == 'k') {
+                                printf("Vote comunicat!\n");
+                                teams[teamTurn]->unAwait(teams[teamTurn]->posOfNfds(i));
+
+                                if (buffer[1] == 'y') {
+                                    ++yesVote;
+                                } else {
+                                    --yesVote;
+                                }
+                                buffer[5] = '\n';
+                                sendToTeam(buffer, teamTurn);
+
+                            } else {
+                                buffer[0] = buffer[4] = 'e';
+                                buffer[1] = buffer[2] = buffer[3] = 'r';
+                                buffer[5] = '\n';
+                                rc = write(fds[i].fd, &buffer, 6 * sizeof (char));
+                                printf("Invalid input\n");
+                                if (rc < 0) { //write failed
+                                    perror("write() failed");
+                                    close_conn = 1;
+                                }
+                            }
+
+
+                        } else {
+                            printf("Sorry, not waiting for you\n");
+                            buffer[0] = buffer[4] = 'b';
+                            buffer[1] = 'n';
+                            buffer[2] = 'y';
+                            buffer[3] = 't';
+                            buffer[5] = '\n';
+                            rc = write(fds[i].fd, &buffer, 6 * sizeof (char));
+                            if (rc < 0) { //write failed
+                                perror("write() failed");
+                                close_conn = 1;
+                            }
                         }
+
+
                     }
                 }
             }
-
             //close connection
             if (close_conn == 1) {
-                printf("closing connection...\n");
-                close(fds[i].fd);
-                fds[i].fd *= -1;
-                char buffer[6] = {'s', 'i', 'n', 'n', 's', '\n'};
-                for (int j = 0; j < NUMBER_OF_TEAMS; ++j) {
-                    if (teams[j]->isInTeam(i)) {
-                        teams[j]->removeFromTeam(i);
-                        buffer[1] = '0' + teams[j]->getId();
-                        buffer[2] = '0' + teams[j]->getSize() / 10;
-                        buffer[3] = '0' + teams[j]->getSize() % 10;
-                        break;
-                    }
-                }
-                updateFds();
-                //do każdej osoby stan teamu z którego ktoś odszedł
-                sendToAll(buffer, true);
+                writeError(i, false);
             }
         }
-
-        //updateFds(); //probably useless now here
-
+        //koniec jeżeli widmo
         if (nfds < sumSize() + 1) {
-            for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
+            printf("Widmo...\n");
+            perror("phantom Player\n");
+            for (unsigned int i = 0; i < NUMBER_OF_TEAMS; ++i) {
+                printf("Team: %d\t", teams[i]->getId());
                 teams[i]->printfNfds();
             }
-            printf("Widmo...\n");
+            end = true;
         }
-
-        /*printfTeamsSizes();
-        for (int i = 0; i < NUMBER_OF_TEAMS; ++i) {
-            char buffer[6] = {'t', 'e', 'a', 'm', '0', '\n'};
-            printf("Team: %d\t",teams[i]->getId());
-            buffer[4] = '0' + teams[i]->getId();
-            teams[i]->printfNfds();
-            sendToTeam(buffer, i);
-        }*/
-
+        //koniec gry bo pusty team
         if (ready == true && emptyTeam() != -1) {
-            //koniec gry bo pusty team
-            char buffer[6] = {'w', 'i', 'n', '0', 'w', '\n'};
+            char buffer[6] = {'W', 'i', 'n', '0', 'W', '\n'};
             printf("No players in a team.\n");
             sendToAll(buffer, true);
             end = true;

@@ -27,5 +27,10 @@ Card* Castle::getCard(int n) {
     }
 }
 
+Card* Castle::getLastCard() {
+    return &castle.back();
+}
+
+
 
 
