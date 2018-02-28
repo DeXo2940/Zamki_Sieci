@@ -20,7 +20,7 @@
 #define POLL_TIMEOUT 5000
 #define MAX_FDS 200
 #define FIRST_LIMIT 60
-#define SECOND_LIMIT 15
+#define SECOND_LIMIT 2
 
 struct pollfd fds[MAX_FDS];
 int nfds = 1;
