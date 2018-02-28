@@ -38,7 +38,6 @@ public class Main extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
         primaryStage.setOnHidden(e -> {
-            controller.exitApplication();
             Platform.exit();
         });
 
