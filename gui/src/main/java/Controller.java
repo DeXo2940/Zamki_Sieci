@@ -115,11 +115,10 @@ public class Controller implements Initializable {
                     if (new_toggle.equals(our)) {
                         hideCastle(client.getGame().getOpposite().getNumber());
                         showCastle(client.getTeamNumber());
-                        System.out.println("Nasz zamek");
                     } else {
                         hideCastle(client.getTeamNumber());
                         showCastle(client.getGame().getOpposite().getNumber());
-                        System.out.println("Ich zamek");
+
                     }
 
 
