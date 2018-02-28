@@ -21,7 +21,7 @@
       <Label fx:id="teamLabel" layoutX="2.0" prefHeight="26.0" prefWidth="866.0" text="Twój team:" />
       <Button fx:id="endGame" layoutX="938.0" layoutY="59.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="195.0" text="Zakończ grę" />
       <Button layoutX="938.0" layoutY="28.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="195.0" text="Wyświetl zasady" />
-      <Label layoutX="938.0" layoutY="98.0" text="Label" />
-      <Label layoutX="939.0" layoutY="143.0" text="Label" />
+      <Label  layoutX="938.0" layoutY="98.0" text="Informacje o drużynach:" />
+      <Label fx:id="info" layoutX="939.0" layoutY="143.0" text="Label" /> <Label fx:id="info2" layoutX="939" layoutY="200" text="Label"/>
    </children>
 </AnchorPane>

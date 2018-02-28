@@ -8,6 +8,7 @@ public class Team {
     private StringProperty color = new SimpleStringProperty();
     private Integer number;
     private ArrayList<Card> castle;
+    private StringProperty teamInfo = new SimpleStringProperty();
 
     public Team (String color, Integer number) {
         players = new ArrayList<>();
@@ -15,6 +16,10 @@ public class Team {
         this.number = number;
         castle = new ArrayList<>();
         //System.out.println("Castle size"+castle.size());
+    }
+
+    public String infoToString() {
+        return this.getColor()+ " (";
     }
 
     public Team (Integer player, String color, Integer number) {
@@ -69,5 +74,17 @@ public class Team {
 
     public void setCastle(ArrayList<Card> castle) {
         this.castle = castle;
+    }
+
+    public String getTeamInfo() {
+        return teamInfo.get();
+    }
+
+    public StringProperty teamInfoProperty() {
+        return teamInfo;
+    }
+
+    public void setTeamInfo(String teamInfo) {
+        this.teamInfo.set(teamInfo);
     }
 }

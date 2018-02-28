@@ -41,7 +41,7 @@ public class Controller implements Initializable {
     @FXML
     private RadioButton our, their;
     @FXML
-    private Label teamLabel;
+    private Label teamLabel, info, info2;
     final ToggleGroup group = new ToggleGroup();
 
 
@@ -277,6 +277,15 @@ public class Controller implements Initializable {
                     @Override
                     public void run() {
                         teamLabel.textProperty().bind(client.infoProperty());
+                    }
+                });
+
+                Platform.runLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        teamLabel.textProperty().bind(client.infoProperty());
+                        info.textProperty().bind(client.getGame().getMine().teamInfoProperty());
+                        info2.textProperty().bind(client.getGame().getOpposite().teamInfoProperty());
                     }
                 });
 

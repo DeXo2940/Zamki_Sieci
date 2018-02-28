@@ -245,7 +245,14 @@ public class Client implements Runnable {
             ///jestem gotowyyyyyyy
 
             //////////////////////koniec inicjalizacji
-
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    setInfo("Gra zainicjalizowana!");
+                    getGame().getMine().setTeamInfo(getGame().getMine().infoToString() + String.valueOf(getGame().getMine().getPlayers().size()) + ")");
+                    getGame().getOpposite().setTeamInfo(getGame().getOpposite().infoToString() + String.valueOf(getGame().getOpposite().getPlayers().size()) + ")");
+                }
+            });
 
             while (socket.isConnected()) {
                 while ((fromsrv = inFromServer.readLine()) != null) {
@@ -254,9 +261,23 @@ public class Client implements Runnable {
                         switch (fromsrv.charAt(0)) {
                             case 's':
                                 addPlayer(fromsrv);
+                                Platform.runLater(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        setInfo("Dodano nowego gracza!");
+                                        getGame().getMine().setTeamInfo(getGame().getMine().infoToString() + String.valueOf(getGame().getMine().getPlayers().size()) + ")");
+                                        getGame().getOpposite().setTeamInfo(getGame().getOpposite().infoToString() + String.valueOf(getGame().getOpposite().getPlayers().size()) + ")");
+                                    }
+                                });
                                 break;
                             case 'R':
                                 setReady(true);
+                                Platform.runLater(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        setInfo("Gra gotowa!");
+                                    }
+                                });
                                 System.out.println("Jestem gotowy");
                                 break;
                             case 'j':
@@ -265,12 +286,14 @@ public class Client implements Runnable {
                             case 'W':
                                 whoWin(fromsrv);
                                 String winner;
-                                if(getGame().getWinnerTeamId() == getTeamNumber()) winner = this.getGame().getMine().getColor();
+                                if (getGame().getWinnerTeamId() == getTeamNumber())
+                                    winner = this.getGame().getMine().getColor();
                                 else winner = this.getGame().getOpposite().getColor();
                                 Platform.runLater(new Runnable() {
                                     @Override
                                     public void run() {
-                                        alert("Wygrała drużyna: "+winner);
+                                        alert("Wygrała drużyna: " + winner);
+
                                     }
                                 });
 
@@ -278,12 +301,6 @@ public class Client implements Runnable {
                                 break;
                             case 'e':
                                 handleError();
-                                break;
-                            case 'd':
-                                move();
-                                break;
-                            case 'w':
-                                waitForIt();
                                 break;
                             case 'm':
                                 break;
@@ -320,14 +337,16 @@ public class Client implements Runnable {
                                 break;
                             case 'z':
                                 setVote(false);
+                                Platform.runLater(() -> {
+                                    setInfo("Karta w zamku!");
+                                });
                                 System.out.println("Zamek zameczek zamkuś");
                                 Integer id = Integer.parseInt(String.valueOf(fromsrv.charAt(1)));
                                 System.out.println(id);
                                 String c = "" + fromsrv.charAt(2) + fromsrv.charAt(3);
-                                if(getTeamNumber() == id) {
+                                if (getTeamNumber() == id) {
                                     getGame().getMine().addToCastle(new Card(Integer.parseInt(c)));
-                                }
-                                else getGame().getOpposite().addToCastle(new Card(Integer.parseInt(c)));
+                                } else getGame().getOpposite().addToCastle(new Card(Integer.parseInt(c)));
                                 Integer cards = getGame().getHowManyCards() - 1;
                                 getGame().setHowManyCards(cards);
                                 setCastleChange(true);
@@ -336,12 +355,18 @@ public class Client implements Runnable {
                                 Integer car = getGame().getHowManyCards() - 1;
                                 getGame().setHowManyCards(car);
                                 Platform.runLater(() -> {
-                                    alert("Karta jest za mała do zamków! Tracisz kolejkę");
+                                    setInfo("Karta jest za mała do zamków! Tracisz kolejkę");
                                 });
                                 break;
                             default:
                                 handleError();
                         }
+                        if(!ifMyMove)    Platform.runLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                setInfo("Czekaj");
+                            }
+                        });
                     }
                     ///aktualizuje graczy w teamie
 
@@ -350,8 +375,7 @@ public class Client implements Runnable {
 
 
         } catch (SocketException e) {
-        }
-         catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -364,7 +388,7 @@ public class Client implements Runnable {
             message = "knnnk";
         }
         sendMessage(message);
-            System.out.println("Wysyłam: "+message);
+        System.out.println("Wysyłam: " + message);
 
     }
 
