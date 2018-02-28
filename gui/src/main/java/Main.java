@@ -34,16 +34,17 @@ public class Main extends Application {
 
         AnchorPane root = loader.load();
         Scene scene = new Scene(root);
-        primaryStage.setTitle("Hello World");
+        primaryStage.setTitle("Zamki");
         primaryStage.setScene(scene);
         primaryStage.show();
+        primaryStage.setOnHidden(e -> {
+            controller.exitApplication();
+            Platform.exit();
+        });
+
 
     }
 
-    @Override
-    public void stop(){
-
-    }
 
     public static void main(String[] args) {
         launch(args);

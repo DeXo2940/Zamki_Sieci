@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
@@ -41,7 +42,6 @@ public class Controller implements Initializable {
     private RadioButton our, their;
     @FXML
     private Label teamLabel;
-
 
 
     public void alert(String text) {
@@ -100,7 +100,7 @@ public class Controller implements Initializable {
         //teamLabel.setText("Twój team: " + client.getGame().getMine().getColor());
 
         endGame.setOnAction((ActionEvent event) -> {
-            alert("Pomyślnie dodano klienta");
+            Platform.exit();
 
         });
 
@@ -109,16 +109,15 @@ public class Controller implements Initializable {
         our.setToggleGroup(group);
         their.setToggleGroup(group);
 
-        group.selectedToggleProperty().addListener(new ChangeListener<Toggle>(){
+        group.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
             public void changed(ObservableValue<? extends Toggle> ov,
                                 Toggle old_toggle, Toggle new_toggle) {
                 if (group.getSelectedToggle() != null) {
-                    if(new_toggle.equals(our)) {
+                    if (new_toggle.equals(our)) {
                         hideCastle(client.getGame().getOpposite().getNumber());
                         showCastle(client.getTeamNumber());
                         System.out.println("Nasz zamek");
-                    }
-                    else {
+                    } else {
                         hideCastle(client.getTeamNumber());
                         showCastle(client.getGame().getOpposite().getNumber());
                         System.out.println("Ich zamek");
@@ -132,21 +131,22 @@ public class Controller implements Initializable {
 
     }
 
+
+
     private void hideCastle(Integer number) {
         castlePane.getChildren().clear();
         castlePane.getChildren().addAll(our, their);
     }
 
     private void showCastle(Integer teamNumber) {
-       Integer size;
-        if(teamNumber == client.getTeamNumber()) {
-           size = client.getGame().getMine().getCastle().size();
-           myCastle = new ArrayList<>();
-           Team team = client.getGame().getMine();
-           drawCastle(myCastle, castlePane, size, team, Color.YELLOW);
+        Integer size;
+        if (teamNumber == client.getTeamNumber()) {
+            size = client.getGame().getMine().getCastle().size();
+            myCastle = new ArrayList<>();
+            Team team = client.getGame().getMine();
+            drawCastle(myCastle, castlePane, size, team, Color.YELLOW);
 
-       }
-       else {
+        } else {
             size = client.getGame().getOpposite().getCastle().size();
             theirCastle = new ArrayList<>();
             Team team = client.getGame().getOpposite();
@@ -154,7 +154,7 @@ public class Controller implements Initializable {
         }
     }
 
-    public void drawCastle (ArrayList<Rectangle> listRec, AnchorPane pane, Integer size, Team team, Color color) {
+    public void drawCastle(ArrayList<Rectangle> listRec, AnchorPane pane, Integer size, Team team, Color color) {
         String l;
         for (int i = 0; i < size; i++) {
             Rectangle rect = new Rectangle();
@@ -169,14 +169,13 @@ public class Controller implements Initializable {
             listRec.add(rect);
             StackPane stackPane = new StackPane();
             pane.getChildren().add(stackPane);
-            stackPane.getChildren().addAll(rect,text);
+            stackPane.getChildren().addAll(rect, text);
             if (i < 15) {
                 stackPane.setLayoutY(30);
                 stackPane.setLayoutX(20 + 55 * i);
-            }
-            else {
+            } else {
                 stackPane.setLayoutX(120);
-                stackPane.setLayoutY(20 + 55 * (i-15));
+                stackPane.setLayoutY(20 + 55 * (i - 15));
             }
         }
     }
@@ -214,19 +213,39 @@ public class Controller implements Initializable {
                         }
                     }
                 });
-                /*
-                client.getGame().getMine().getColorProperty().addListener(new ChangeListener<String>() {
+                client.isVoteProperty().addListener(new ChangeListener<Boolean>() {
                     @Override
-                    public void changed(ObservableValue<? extends String> observableValue, String s, String t1) {
-                        Platform.runLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                teamLabel.setText("Twój team: " + t1);
-                            }
-                        });
+                    public void changed(ObservableValue<? extends Boolean> observableValue, Boolean aBoolean, Boolean t1) {
+                        if (t1) {
+                            Platform.runLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                                    alert.setTitle("Głosowanie");
+                                    alert.setHeaderText("Karta nr " + Integer.valueOf(client.getActualCard()));
+                                    alert.setContentText("Czy dodać do zamku?");
 
+                                    ButtonType buttonTypeOne = new ButtonType("Tak");
+                                    ButtonType buttonTypeTwo = new ButtonType("Nie");
+
+                                    alert.getButtonTypes().setAll(buttonTypeOne, buttonTypeTwo);
+
+                                    Optional<ButtonType> result = alert.showAndWait();
+                                    if (result.get() == buttonTypeOne) {
+                                        System.out.println("Dodano kartę do zamku");
+                                        client.vote(true);
+                                    } else {
+                                        System.out.println("Nie dodano karty");
+                                        client.vote(false);
+                                    }
+
+
+                                }
+                            });
+                        }
                     }
-                });*/
+                });
+
                 client.run();
 
 

@@ -5,10 +5,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.Alert;
 
 import java.io.*;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.Random;
 
 public class Client implements Runnable {
@@ -16,7 +13,8 @@ public class Client implements Runnable {
 
     private Socket socket;
     private Integer teamNumber = 0;
-    private Integer move;
+    private BooleanProperty vote = new SimpleBooleanProperty();
+    private Integer actualCard;
     private boolean ifMyMove = false;
 
     public Game getGame() {
@@ -39,6 +37,7 @@ public class Client implements Runnable {
 
     public Client() {
         this.game = new Game();
+        setVote(false);
     }
 
     public boolean doIt(String server, int serverPort) {
@@ -244,7 +243,7 @@ public class Client implements Runnable {
             //////////////////////koniec inicjalizacji
 
 
-            while (true) {
+            while (socket.isConnected()) {
                 while ((fromsrv = inFromServer.readLine()) != null) {
                     System.out.println(fromsrv);
                     if (checkCommunicate(fromsrv)) {
@@ -275,6 +274,19 @@ public class Client implements Runnable {
                                 break;
                             case 'y':
                                 setIfMyMove(true);
+                                System.out.println("Mój ruch");
+                                break;
+                            case 'l':
+                                System.out.println("Wybrano kartę");
+                                break;
+                            case 'v':
+                                String card = "" + fromsrv.charAt(2) + fromsrv.charAt(3);
+                                setActualCard(Integer.valueOf(card));
+                                System.out.println("Aktualna karta: " + getActualCard());
+                                break;
+                            case 'V':
+                                setVote(true);
+                                System.out.println("Uaktywniam głosowanie ");
                                 break;
                             default:
                                 handleError();
@@ -286,25 +298,48 @@ public class Client implements Runnable {
             }
 
 
-        } catch (Exception e) {
+        } catch (SocketException e) {
+        }
+         catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    public void vote(boolean decision) {
+        String message;
+        if (decision) {
+            message = "kyyyk";
+        } else {
+            message = "knnnk";
+        }
+        sendMessage(message);
+            System.out.println("Wysyłam: "+message);
+
+    }
+
+    public void sendMessage(String message) {
+        try {
+            //DataOutputStream outToServer = new DataOutputStream(this.socket.getOutputStream());
+            //outToServer.writeUTF(message);
+            PrintWriter out = new PrintWriter(socket.getOutputStream());
+            out.write(message.toCharArray());
+            out.flush();
+            //out.close();
+        } catch (IOException e) {
+            alert("Błąd w aplikacji!");
+        }
+    }
+
     public void chooseCard(Integer id) {
+        setIfMyMove(false);
         System.out.println("Id wybranej karty: " + id);
         String message;
         if (id < 10) {
             message = "l" + String.valueOf(this.getTeamNumber()) + "0" + String.valueOf(id) + "l";
         } else message = "l" + String.valueOf(this.getTeamNumber()) + String.valueOf(id) + "l";
-
+        sendMessage(message);
         System.out.println(message);
-        try {
-            DataOutputStream outToServer = new DataOutputStream(this.socket.getOutputStream());
-            outToServer.writeBytes(message);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
 
     }
 
@@ -366,5 +401,29 @@ public class Client implements Runnable {
 
     public void setIfMyMove(boolean ifMyMove) {
         this.ifMyMove = ifMyMove;
+    }
+
+    public Integer getActualCard() {
+        return actualCard;
+    }
+
+    public void setActualCard(Integer actualCard) {
+        this.actualCard = actualCard;
+    }
+
+    public boolean isVote() {
+        return vote.get();
+    }
+
+    public void setVote(boolean vote) {
+        this.vote.setValue(vote);
+    }
+
+    public BooleanProperty isVoteProperty() {
+        return vote;
+    }
+
+    public Socket getSocket() {
+        return socket;
     }
 }

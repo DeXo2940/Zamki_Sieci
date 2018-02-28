@@ -20,6 +20,7 @@ public class Join implements Initializable {
     @FXML
     private Button btn;
     private Stage stage;
+    private Client client;
 
     @FXML
     private TextField srv, port;
@@ -36,7 +37,7 @@ public class Join implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        Client client = new Client();
+        client = new Client();
         btn.setOnAction((ActionEvent actionEvent) -> {
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/GUI.fxml"));
@@ -54,6 +55,7 @@ public class Join implements Initializable {
                 if(gotit) {
                     controller.setClient(client);
                     stage.getScene().setRoot(pane);
+                    stage.setTitle("Zamki");
                     stage.setHeight(700);
                     stage.setWidth(1150);
                     stage.setResizable(false);
@@ -66,5 +68,12 @@ public class Join implements Initializable {
             }
         });
     }
-
+    public void exitApplication() {
+        try {
+            client.getSocket().close();
+            System.out.println("Zamknąłem socket");
+        } catch (IOException e) {
+            alert("Nie udało się rozłączyć");
+        }
+    }
 }
